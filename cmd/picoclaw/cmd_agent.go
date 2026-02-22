@@ -70,6 +70,7 @@ func agentCmd() {
 	}
 
 	msgBus := bus.NewMessageBus()
+	defer msgBus.Close()
 	agentLoop := agent.NewAgentLoop(cfg, msgBus, provider)
 
 	// Print agent startup info (only for interactive mode)
