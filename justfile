@@ -236,6 +236,41 @@ campaign-test:
 aperture-test:
     {{go}} test ./pkg/aperture/... ./pkg/tailscale/... -v
 
+# ─── Drift Detection ──────────────────────────────────────────────────────────
+
+# Check for config drift between Dhall source and active JSON config
+drift-check config="" dhall="":
+    @if [ -n "{{config}}" ] && [ -n "{{dhall}}" ]; then \
+        python3 scripts/drift-check.py --config "{{config}}" --dhall "{{dhall}}"; \
+    elif [ -n "{{config}}" ]; then \
+        python3 scripts/drift-check.py --config "{{config}}"; \
+    else \
+        python3 scripts/drift-check.py; \
+    fi
+
+# ─── Attic Binary Cache ──────────────────────────────────────────────────────
+
+# Push Nix build artifacts to Attic cache
+attic-push:
+    @echo "Pushing to Attic cache..."
+    nix build .#picoclaw --no-link --print-out-paths | xargs attic push picoclaw
+    nix build .#dhall-config --no-link --print-out-paths | xargs attic push picoclaw
+    @echo "Push complete"
+
+# Verify fixed-point build (rebuild produces identical output)
+fixed-point-check:
+    @echo "Verifying fixed-point build..."
+    @FIRST=$$(nix build .#picoclaw --no-link --print-out-paths) && \
+    FIRST_HASH=$$(nix hash path "$$FIRST") && \
+    SECOND=$$(nix build .#picoclaw --no-link --print-out-paths --rebuild) && \
+    SECOND_HASH=$$(nix hash path "$$SECOND") && \
+    if [ "$$FIRST_HASH" = "$$SECOND_HASH" ]; then \
+        echo "Fixed-point verified: $$FIRST_HASH"; \
+    else \
+        echo "Fixed-point FAILED: $$FIRST_HASH != $$SECOND_HASH"; \
+        exit 1; \
+    fi
+
 # ─── Installation ──────────────────────────────────────────────────────────────
 
 # Install binary to INSTALL_PREFIX/bin
