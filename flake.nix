@@ -29,10 +29,16 @@
             pname = "picoclaw";
             inherit version;
             src = ./.;
-            vendorHash = null; # Set after first build or use goModules
-            CGO_ENABLED = 0;
+            vendorHash = "sha256-K3VY1oBTfb0suCHDYvR9zmSvXMNW31qiRH0R5BFsY9A=";
+            env.CGO_ENABLED = "0";
+            tags = [ "stdjson" ];
             inherit ldflags;
             subPackages = [ "cmd/picoclaw" ];
+
+            preBuild = ''
+              # go:generate copies workspace/ into onboard package for embedding
+              cp -r workspace cmd/picoclaw/internal/onboard/workspace
+            '';
 
             # Skip tests that require network
             doCheck = false;

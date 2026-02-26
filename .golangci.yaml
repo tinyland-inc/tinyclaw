@@ -3,7 +3,7 @@ version: "2"
 linters:
   default: all
   disable:
-    # TODO: Tweak for current project needs
+    # Permanently disabled: not useful for this project's style
     - containedctx
     - cyclop
     - depguard
@@ -27,7 +27,7 @@ linters:
     - wsl
     - wsl_v5
 
-    # TODO: Disabled, because they are failing at the moment, we should fix them and enable (step by step)
+    # Disabled: need incremental enablement
     - contextcheck
     - embeddedstructfieldcheck
     - errcheck
