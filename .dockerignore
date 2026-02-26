@@ -1,6 +1,9 @@
 .git
 .gitignore
+.github/
+.direnv/
 build/
+result
 .picoclaw/
 config/
 .env
@@ -8,3 +11,10 @@ config/
 *.md
 LICENSE
 assets/
+dhall/
+fstar/
+futhark/
+nix/
+scripts/
+tests/
+docs/

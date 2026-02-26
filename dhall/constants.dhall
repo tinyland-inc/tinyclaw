@@ -163,6 +163,19 @@ let defaults
         }
       , heartbeat = { enabled = True, interval = 30 }
       , devices = { enabled = False, monitor_usb = True }
+      , tailscale =
+        { enabled = False
+        , hostname = "picoclaw"
+        , state_dir = ""
+        , auth_key{- -} = ""
+        }
+      , aperture =
+        { enabled = False
+        , proxy_url = ""
+        , webhook_url = ""
+        , webhook_key{- -} = ""
+        , cerbos_url = ""
+        }
       }
 
 in  defaults

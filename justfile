@@ -56,7 +56,7 @@ dhall-check:
     @echo "Dhall type-check passed"
 
 # Render Dhall config to JSON
-dhall-render target="defaults":
+dhall-render target="tinyland":
     @mkdir -p dhall/rendered
     dhall-to-json --file dhall/examples/{{target}}.dhall --output dhall/rendered/{{target}}.json
     @echo "Rendered dhall/examples/{{target}}.dhall -> dhall/rendered/{{target}}.json"
@@ -149,7 +149,7 @@ migrate-to-dhall-preview config="":
         {{build_dir}}/{{binary_name}} migrate to-dhall --dry-run; \
     fi
 
-# ─── F* Verified Core (Sprint 2+) ──────────────────────────────────────────────
+# ─── F* Verified Core ─────────────────────────────────────────────────────────
 
 # Type-check and verify all F* modules
 fstar-check:
@@ -220,7 +220,7 @@ fstar-proof:
     fstar.exe --include fstar/src fstar/src/PicoClaw.Proof.fst
     @echo "All security proofs verified"
 
-# ─── Futhark Compute Kernels (Sprint 3+) ───────────────────────────────────────
+# ─── Futhark Compute Kernels ──────────────────────────────────────────────────
 
 # Type-check Futhark programs
 futhark-check:

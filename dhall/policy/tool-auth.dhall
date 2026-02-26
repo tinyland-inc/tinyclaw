@@ -3,7 +3,7 @@
 -- and which are denied by default.
 --
 -- This is the Dhall source of truth for tool authorization.
--- Sprint 2 will add F*-verified enforcement of these policies.
+-- F*-verified enforcement lives in fstar/src/PicoClaw.ToolAuth.fst.
 
 let ToolGrant =
       { tool_name : Text
