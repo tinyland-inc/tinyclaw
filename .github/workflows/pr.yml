@@ -4,7 +4,7 @@ on:
   pull_request: { }
 
 env:
-  DHALL_VERSION: "1.42.1"
+  DHALL_VERSION: "1.42.2"
   DHALL_JSON_VERSION: "1.7.12"
 
 jobs:
