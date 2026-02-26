@@ -224,6 +224,12 @@ nix-bundle:
     nix build .#picoclaw-bundle
     @echo "Bundle built: result/"
 
+# ─── Aperture / Tailscale ──────────────────────────────────────────────────────
+
+# Run Aperture integration tests
+aperture-test:
+    {{go}} test ./pkg/aperture/... ./pkg/tailscale/... -v
+
 # ─── Installation ──────────────────────────────────────────────────────────────
 
 # Install binary to INSTALL_PREFIX/bin

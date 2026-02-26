@@ -58,6 +58,8 @@ type Config struct {
 	Tools     ToolsConfig     `json:"tools"`
 	Heartbeat HeartbeatConfig `json:"heartbeat"`
 	Devices   DevicesConfig   `json:"devices"`
+	Tailscale TailscaleConfig `json:"tailscale,omitempty"`
+	Aperture  ApertureConfig  `json:"aperture,omitempty"`
 }
 
 // MarshalJSON implements custom JSON marshaling for Config
@@ -315,6 +317,23 @@ type HeartbeatConfig struct {
 type DevicesConfig struct {
 	Enabled    bool `json:"enabled"     env:"PICOCLAW_DEVICES_ENABLED"`
 	MonitorUSB bool `json:"monitor_usb" env:"PICOCLAW_DEVICES_MONITOR_USB"`
+}
+
+// TailscaleConfig holds Tailscale tsnet integration settings.
+type TailscaleConfig struct {
+	Enabled  bool   `json:"enabled"   env:"PICOCLAW_TAILSCALE_ENABLED"`
+	Hostname string `json:"hostname"  env:"PICOCLAW_TAILSCALE_HOSTNAME"`
+	StateDir string `json:"state_dir" env:"PICOCLAW_TAILSCALE_STATE_DIR"`
+	AuthKey  string `json:"auth_key"  env:"PICOCLAW_TAILSCALE_AUTH_KEY"`
+}
+
+// ApertureConfig holds Tailscale Aperture proxy integration settings.
+type ApertureConfig struct {
+	Enabled    bool   `json:"enabled"     env:"PICOCLAW_APERTURE_ENABLED"`
+	ProxyURL   string `json:"proxy_url"   env:"PICOCLAW_APERTURE_PROXY_URL"`
+	WebhookURL string `json:"webhook_url" env:"PICOCLAW_APERTURE_WEBHOOK_URL"`
+	WebhookKey string `json:"webhook_key" env:"PICOCLAW_APERTURE_WEBHOOK_KEY"`
+	CerbosURL  string `json:"cerbos_url"  env:"PICOCLAW_APERTURE_CERBOS_URL"`
 }
 
 type ProvidersConfig struct {

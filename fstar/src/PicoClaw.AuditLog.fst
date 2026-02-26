@@ -24,6 +24,8 @@ type audit_event =
   | LLMCallCompleted of string (* model with token count *)
   | SessionCreated of string   (* session_key *)
   | MessageProcessed of string (* summary *)
+  | ApertureMetering of string (* request_id with token usage *)
+  | CerbosDecision of string   (* tool_name with allow/deny decision *)
 
 (** A single audit log entry *)
 type audit_entry = {
