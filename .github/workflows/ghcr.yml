@@ -1,22 +1,10 @@
 # Build and push container image to GHCR on main branch pushes.
-# Copy this to .github/workflows/ghcr.yml in each agent repo.
-#
-# Tags:
-#   sha-<commit>  — immutable, Renovate tracks these
-#   edge          — rolling latest from main branch
-#   latest        — alias for edge on main
-#   v*            — semver release tags
-#
-# Usage:
-#   1. Copy to repo's .github/workflows/ghcr.yml
-#   2. Update REPO_NAME env var
-#   3. Push to main branch
+# Rolling edge/sha tags only; release tags are handled by GoReleaser in release.yml.
 name: GHCR Build
 
 on:
   push:
     branches: [main]
-    tags: ['v*']
   workflow_dispatch:
 
 env:
@@ -56,7 +44,6 @@ jobs:
             type=sha,prefix=sha-,format=short
             type=edge,branch=main
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=semver,pattern=v{{version}}
 
       - name: Build and push
         uses: docker/build-push-action@v6

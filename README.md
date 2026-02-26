@@ -75,16 +75,12 @@ The F* core proves six safety properties ([`PicoClaw.Proof`](fstar/src/PicoClaw.
 ### Install from source
 
 ```bash
-git clone https://github.com/sipeed/picoclaw.git
+git clone https://github.com/tinyland-inc/picoclaw.git
 cd picoclaw
 
 # Using just (recommended)
 just build
 just install
-
-# Or with make (legacy, still works)
-make build
-make install
 ```
 
 ### Using Nix
@@ -209,7 +205,7 @@ Use `vendor/model` in the `model` field (e.g., `anthropic/claude-sonnet-4-6`).
 | WhatsApp | Business API credentials |
 | MaixCAM | Local serial connection |
 
-Enable in config under `channels.<name>.enabled = true`. See [docs/channels/](docs/channels/) for per-platform setup guides.
+Enable in config under `channels.<name>.enabled = true`.
 
 ## Build System
 
@@ -261,8 +257,6 @@ just aperture-test       # run Aperture/Tailscale tests
 just install             # install to ~/.local/bin
 just uninstall           # remove binary
 ```
-
-The legacy `Makefile` is preserved for backward compatibility.
 
 ## Project Structure
 
