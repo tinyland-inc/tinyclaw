@@ -10,6 +10,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os/exec"
@@ -102,7 +103,7 @@ func (p *CoreProxy) Start(ctx context.Context) error {
 	defer p.mu.Unlock()
 
 	if p.running {
-		return fmt.Errorf("core proxy already running")
+		return errors.New("core proxy already running")
 	}
 
 	p.cmd = exec.CommandContext(ctx, p.binaryPath)
@@ -237,6 +238,8 @@ func (p *CoreProxy) sendRequest(req RPCRequest) error {
 }
 
 // readResponses continuously reads JSON-RPC responses from the core's stdout.
+//
+//nolint:gocognit // response reading loop: handles many JSON-RPC message types
 func (p *CoreProxy) readResponses() {
 	for {
 		p.mu.Lock()

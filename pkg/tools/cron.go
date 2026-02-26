@@ -125,7 +125,7 @@ func (t *CronTool) Execute(ctx context.Context, args map[string]any) *ToolResult
 	case "disable":
 		return t.enableJob(args, false)
 	default:
-		return ErrorResult(fmt.Sprintf("unknown action: %s", action))
+		return ErrorResult("unknown action: " + action)
 	}
 }
 
@@ -247,7 +247,7 @@ func (t *CronTool) removeJob(args map[string]any) *ToolResult {
 	}
 
 	if t.cronService.RemoveJob(jobID) {
-		return SilentResult(fmt.Sprintf("Cron job removed: %s", jobID))
+		return SilentResult("Cron job removed: " + jobID)
 	}
 	return ErrorResult(fmt.Sprintf("Job %s not found", jobID))
 }
@@ -293,7 +293,7 @@ func (t *CronTool) ExecuteJob(ctx context.Context, job *cron.CronJob) string {
 		result := t.execTool.Execute(ctx, args)
 		var output string
 		if result.IsError {
-			output = fmt.Sprintf("Error executing scheduled command: %s", result.ForLLM)
+			output = "Error executing scheduled command: " + result.ForLLM
 		} else {
 			output = fmt.Sprintf("Scheduled command '%s' executed:\n%s", job.Payload.Command, result.ForLLM)
 		}
@@ -317,7 +317,7 @@ func (t *CronTool) ExecuteJob(ctx context.Context, job *cron.CronJob) string {
 	}
 
 	// For deliver=false, process through agent (for complex tasks)
-	sessionKey := fmt.Sprintf("cron-%s", job.ID)
+	sessionKey := "cron-" + job.ID
 
 	// Call agent with job's message
 	response, err := t.executor.ProcessDirectWithChannel(

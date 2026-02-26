@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/tinyland-inc/picoclaw/pkg/config"
@@ -135,13 +136,13 @@ func renderAgents(b *strings.Builder, agents *config.AgentsConfig, indent string
 	b.WriteString(indent + "    , model_fallbacks = " + dhallTextList(d.ModelFallbacks) + "\n")
 	b.WriteString(indent + "    , image_model = " + dhallOptionalText(d.ImageModel) + "\n")
 	b.WriteString(indent + "    , image_model_fallbacks = " + dhallTextList(d.ImageModelFallbacks) + "\n")
-	b.WriteString(indent + "    , max_tokens = " + fmt.Sprintf("%d", d.MaxTokens) + "\n")
+	b.WriteString(indent + "    , max_tokens = " + strconv.Itoa(d.MaxTokens) + "\n")
 	if d.Temperature != nil {
 		b.WriteString(indent + "    , temperature = Some " + fmt.Sprintf("%g", *d.Temperature) + "\n")
 	} else {
 		b.WriteString(indent + "    , temperature = None Double\n")
 	}
-	b.WriteString(indent + "    , max_tool_iterations = " + fmt.Sprintf("%d", d.MaxToolIterations) + "\n")
+	b.WriteString(indent + "    , max_tool_iterations = " + strconv.Itoa(d.MaxToolIterations) + "\n")
 	b.WriteString(indent + "    }\n")
 
 	if len(agents.List) > 0 {
@@ -185,7 +186,7 @@ func renderBindings(bindings []config.AgentBinding) string {
 		if err != nil {
 			return fmt.Sprintf("-- TODO: convert binding (marshal error: %v)", err)
 		}
-		parts = append(parts, fmt.Sprintf("-- TODO: convert binding: %s", string(bindJSON)))
+		parts = append(parts, "-- TODO: convert binding: "+string(bindJSON))
 	}
 	return "[\n" + strings.Join(parts, "\n") + "\n    ]"
 }
@@ -210,6 +211,7 @@ func renderSession(b *strings.Builder, s *config.SessionConfig, indent string) {
 	b.WriteString(indent + "}\n")
 }
 
+//nolint:funlen // renders all channel types to Dhall; one section per channel kind
 func renderChannels(b *strings.Builder, ch *config.ChannelsConfig, indent string) {
 	b.WriteString(indent + "{ whatsapp =\n")
 	b.WriteString(indent + "  { enabled = " + dhallBool(ch.WhatsApp.Enabled) + "\n")
@@ -243,7 +245,7 @@ func renderChannels(b *strings.Builder, ch *config.ChannelsConfig, indent string
 	b.WriteString(indent + ", maixcam =\n")
 	b.WriteString(indent + "  { enabled = " + dhallBool(ch.MaixCam.Enabled) + "\n")
 	b.WriteString(indent + "  , host = " + dhallText(ch.MaixCam.Host) + "\n")
-	b.WriteString(indent + "  , port = " + fmt.Sprintf("%d", ch.MaixCam.Port) + "\n")
+	b.WriteString(indent + "  , port = " + strconv.Itoa(ch.MaixCam.Port) + "\n")
 	b.WriteString(indent + "  , allow_from = " + dhallTextList(ch.MaixCam.AllowFrom) + "\n")
 	b.WriteString(indent + "  }\n")
 
@@ -273,7 +275,7 @@ func renderChannels(b *strings.Builder, ch *config.ChannelsConfig, indent string
 	b.WriteString(indent + "  , channel_secret{- -} = " + dhallText(ch.LINE.ChannelSecret) + "\n")
 	b.WriteString(indent + "  , channel_access_token{- -} = " + dhallText(ch.LINE.ChannelAccessToken) + "\n")
 	b.WriteString(indent + "  , webhook_host = " + dhallText(ch.LINE.WebhookHost) + "\n")
-	b.WriteString(indent + "  , webhook_port = " + fmt.Sprintf("%d", ch.LINE.WebhookPort) + "\n")
+	b.WriteString(indent + "  , webhook_port = " + strconv.Itoa(ch.LINE.WebhookPort) + "\n")
 	b.WriteString(indent + "  , webhook_path = " + dhallText(ch.LINE.WebhookPath) + "\n")
 	b.WriteString(indent + "  , allow_from = " + dhallTextList(ch.LINE.AllowFrom) + "\n")
 	b.WriteString(indent + "  }\n")
@@ -282,7 +284,7 @@ func renderChannels(b *strings.Builder, ch *config.ChannelsConfig, indent string
 	b.WriteString(indent + "  { enabled = " + dhallBool(ch.OneBot.Enabled) + "\n")
 	b.WriteString(indent + "  , ws_url = " + dhallText(ch.OneBot.WSUrl) + "\n")
 	b.WriteString(indent + "  , access_token{- -} = " + dhallText(ch.OneBot.AccessToken) + "\n")
-	b.WriteString(indent + "  , reconnect_interval = " + fmt.Sprintf("%d", ch.OneBot.ReconnectInterval) + "\n")
+	b.WriteString(indent + "  , reconnect_interval = " + strconv.Itoa(ch.OneBot.ReconnectInterval) + "\n")
 	b.WriteString(indent + "  , group_trigger_prefix = " + dhallTextList(ch.OneBot.GroupTriggerPrefix) + "\n")
 	b.WriteString(indent + "  , allow_from = " + dhallTextList(ch.OneBot.AllowFrom) + "\n")
 	b.WriteString(indent + "  }\n")
@@ -293,10 +295,10 @@ func renderChannels(b *strings.Builder, ch *config.ChannelsConfig, indent string
 	b.WriteString(indent + "  , encoding_aes_key = " + dhallText(ch.WeCom.EncodingAESKey) + "\n")
 	b.WriteString(indent + "  , webhook_url = " + dhallText(ch.WeCom.WebhookURL) + "\n")
 	b.WriteString(indent + "  , webhook_host = " + dhallText(ch.WeCom.WebhookHost) + "\n")
-	b.WriteString(indent + "  , webhook_port = " + fmt.Sprintf("%d", ch.WeCom.WebhookPort) + "\n")
+	b.WriteString(indent + "  , webhook_port = " + strconv.Itoa(ch.WeCom.WebhookPort) + "\n")
 	b.WriteString(indent + "  , webhook_path = " + dhallText(ch.WeCom.WebhookPath) + "\n")
 	b.WriteString(indent + "  , allow_from = " + dhallTextList(ch.WeCom.AllowFrom) + "\n")
-	b.WriteString(indent + "  , reply_timeout = " + fmt.Sprintf("%d", ch.WeCom.ReplyTimeout) + "\n")
+	b.WriteString(indent + "  , reply_timeout = " + strconv.Itoa(ch.WeCom.ReplyTimeout) + "\n")
 	b.WriteString(indent + "  }\n")
 
 	b.WriteString(indent + ", wecom_app =\n")
@@ -307,10 +309,10 @@ func renderChannels(b *strings.Builder, ch *config.ChannelsConfig, indent string
 	b.WriteString(indent + "  , token = " + dhallText(ch.WeComApp.Token) + "\n")
 	b.WriteString(indent + "  , encoding_aes_key = " + dhallText(ch.WeComApp.EncodingAESKey) + "\n")
 	b.WriteString(indent + "  , webhook_host = " + dhallText(ch.WeComApp.WebhookHost) + "\n")
-	b.WriteString(indent + "  , webhook_port = " + fmt.Sprintf("%d", ch.WeComApp.WebhookPort) + "\n")
+	b.WriteString(indent + "  , webhook_port = " + strconv.Itoa(ch.WeComApp.WebhookPort) + "\n")
 	b.WriteString(indent + "  , webhook_path = " + dhallText(ch.WeComApp.WebhookPath) + "\n")
 	b.WriteString(indent + "  , allow_from = " + dhallTextList(ch.WeComApp.AllowFrom) + "\n")
-	b.WriteString(indent + "  , reply_timeout = " + fmt.Sprintf("%d", ch.WeComApp.ReplyTimeout) + "\n")
+	b.WriteString(indent + "  , reply_timeout = " + strconv.Itoa(ch.WeComApp.ReplyTimeout) + "\n")
 	b.WriteString(indent + "  }\n")
 
 	b.WriteString(indent + "}\n")
@@ -375,12 +377,12 @@ func renderTools(b *strings.Builder, t *config.ToolsConfig, indent string) {
 	b.WriteString(indent + "  { brave = H.emptyBrave\n")
 	b.WriteString(indent + "  , tavily = H.emptyTavily\n")
 	b.WriteString(indent + "  , duckduckgo = { enabled = " + dhallBool(t.Web.DuckDuckGo.Enabled) +
-		", max_results = " + fmt.Sprintf("%d", t.Web.DuckDuckGo.MaxResults) + " }\n")
+		", max_results = " + strconv.Itoa(t.Web.DuckDuckGo.MaxResults) + " }\n")
 	b.WriteString(indent + "  , perplexity = H.emptyPerplexity\n")
 	b.WriteString(indent + "  , proxy = " + dhallText(t.Web.Proxy) + "\n")
 	b.WriteString(indent + "  }\n")
 
-	b.WriteString(indent + ", cron = { exec_timeout_minutes = " + fmt.Sprintf("%d", t.Cron.ExecTimeoutMinutes) + " }\n")
+	b.WriteString(indent + ", cron = { exec_timeout_minutes = " + strconv.Itoa(t.Cron.ExecTimeoutMinutes) + " }\n")
 
 	b.WriteString(indent + ", exec =\n")
 	b.WriteString(indent + "  { enable_deny_patterns = " + dhallBool(t.Exec.EnableDenyPatterns) + "\n")
@@ -397,14 +399,14 @@ func renderTools(b *strings.Builder, t *config.ToolsConfig, indent string) {
 	b.WriteString(indent + "      , search_path = " + dhallText(ch.SearchPath) + "\n")
 	b.WriteString(indent + "      , skills_path = " + dhallText(ch.SkillsPath) + "\n")
 	b.WriteString(indent + "      , download_path = " + dhallText(ch.DownloadPath) + "\n")
-	b.WriteString(indent + "      , timeout = " + fmt.Sprintf("%d", ch.Timeout) + "\n")
-	b.WriteString(indent + "      , max_zip_size = " + fmt.Sprintf("%d", ch.MaxZipSize) + "\n")
-	b.WriteString(indent + "      , max_response_size = " + fmt.Sprintf("%d", ch.MaxResponseSize) + "\n")
+	b.WriteString(indent + "      , timeout = " + strconv.Itoa(ch.Timeout) + "\n")
+	b.WriteString(indent + "      , max_zip_size = " + strconv.Itoa(ch.MaxZipSize) + "\n")
+	b.WriteString(indent + "      , max_response_size = " + strconv.Itoa(ch.MaxResponseSize) + "\n")
 	b.WriteString(indent + "      }\n")
 	b.WriteString(indent + "    }\n")
-	b.WriteString(indent + "  , max_concurrent_searches = " + fmt.Sprintf("%d", t.Skills.MaxConcurrentSearches) + "\n")
-	b.WriteString(indent + "  , search_cache = { max_size = " + fmt.Sprintf("%d", t.Skills.SearchCache.MaxSize) +
-		", ttl_seconds = " + fmt.Sprintf("%d", t.Skills.SearchCache.TTLSeconds) + " }\n")
+	b.WriteString(indent + "  , max_concurrent_searches = " + strconv.Itoa(t.Skills.MaxConcurrentSearches) + "\n")
+	b.WriteString(indent + "  , search_cache = { max_size = " + strconv.Itoa(t.Skills.SearchCache.MaxSize) +
+		", ttl_seconds = " + strconv.Itoa(t.Skills.SearchCache.TTLSeconds) + " }\n")
 	b.WriteString(indent + "  }\n")
 
 	b.WriteString(indent + "}\n")
@@ -435,9 +437,9 @@ func dhallOptionalText(s string) string {
 
 func dhallInt(n int) string {
 	if n >= 0 {
-		return fmt.Sprintf("+%d", n)
+		return "+" + strconv.Itoa(n)
 	}
-	return fmt.Sprintf("%d", n)
+	return strconv.Itoa(n)
 }
 
 func dhallTextList(ss []string) string {

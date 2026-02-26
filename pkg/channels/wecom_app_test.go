@@ -11,9 +11,9 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/xml"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"sort"
@@ -90,7 +90,7 @@ func generateSignatureApp(token, timestamp, nonce, msgEncrypt string) string {
 	sort.Strings(params)
 	str := strings.Join(params, "")
 	hash := sha1.Sum([]byte(str))
-	return fmt.Sprintf("%x", hash)
+	return hex.EncodeToString(hash[:])
 }
 
 func TestNewWeComAppChannel(t *testing.T) {

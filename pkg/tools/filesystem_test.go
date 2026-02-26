@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestFilesystemTool_ReadFile_Success verifies successful file reading
@@ -318,23 +319,23 @@ func TestRootMkdirAll(t *testing.T) {
 
 	// Case 1: Single directory
 	err = root.MkdirAll("dir1", 0o755)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	_, err = os.Stat(filepath.Join(workspace, "dir1"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Case 2: Deeply nested directory
 	err = root.MkdirAll("a/b/c/d", 0o755)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	_, err = os.Stat(filepath.Join(workspace, "a/b/c/d"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Case 3: Already exists — must be idempotent
 	err = root.MkdirAll("a/b/c/d", 0o755)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Case 4: A regular file blocks directory creation — must error
 	err = os.WriteFile(filepath.Join(workspace, "file_exists"), []byte("data"), 0o644)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	err = root.MkdirAll("file_exists", 0o755)
 	assert.Error(t, err, "expected error when a file exists at the directory path")
 }
@@ -357,7 +358,7 @@ func TestFilesystemTool_WriteFile_Restricted_CreateDir(t *testing.T) {
 	// Verify file content
 	actualPath := filepath.Join(workspace, testFile)
 	data, err := os.ReadFile(actualPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, content, string(data))
 }
 
@@ -369,11 +370,11 @@ func TestHostRW_Read_PermissionDenied(t *testing.T) {
 	tmpDir := t.TempDir()
 	protected := filepath.Join(tmpDir, "protected.txt")
 	err := os.WriteFile(protected, []byte("secret"), 0o000)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	defer os.Chmod(protected, 0o644) // ensure cleanup
 
 	_, err = (&hostFs{}).ReadFile(protected)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "access denied")
 }
 
@@ -389,12 +390,12 @@ func TestHostRW_Read_Directory(t *testing.T) {
 func TestRootRW_Read_Directory(t *testing.T) {
 	workspace := t.TempDir()
 	root, err := os.OpenRoot(workspace)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	defer root.Close()
 
 	// Create a subdirectory
 	err = root.Mkdir("subdir", 0o755)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	_, err = (&sandboxFs{workspace: workspace}).ReadFile("subdir")
 	assert.Error(t, err, "expected error when reading a directory as a file")
@@ -406,10 +407,10 @@ func TestHostRW_Write_ParentDirMissing(t *testing.T) {
 	target := filepath.Join(tmpDir, "a", "b", "c", "file.txt")
 
 	err := (&hostFs{}).WriteFile(target, []byte("hello"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	data, err := os.ReadFile(target)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "hello", string(data))
 }
 
@@ -420,10 +421,10 @@ func TestRootRW_Write_ParentDirMissing(t *testing.T) {
 
 	relPath := "x/y/z/file.txt"
 	err := (&sandboxFs{workspace: workspace}).WriteFile(relPath, []byte("nested"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	data, err := os.ReadFile(filepath.Join(workspace, relPath))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "nested", string(data))
 }
 
@@ -434,19 +435,19 @@ func TestHostRW_Write(t *testing.T) {
 	testData := []byte("atomic test content")
 
 	err := (&hostFs{}).WriteFile(testFile, testData)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	content, err := os.ReadFile(testFile)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, testData, content)
 
 	// Verify it overwrites correctly
 	newData := []byte("new atomic content")
 	err = (&hostFs{}).WriteFile(testFile, newData)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	content, err = os.ReadFile(testFile)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, newData, content)
 }
 
@@ -459,30 +460,30 @@ func TestRootRW_Write(t *testing.T) {
 
 	erw := &sandboxFs{workspace: tmpDir}
 	err := erw.WriteFile(relPath, testData)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	root, err := os.OpenRoot(tmpDir)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	defer root.Close()
 
 	f, err := root.Open(relPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	defer f.Close()
 
 	content, err := io.ReadAll(f)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, testData, content)
 
 	// Verify it overwrites correctly
 	newData := []byte("new root atomic content")
 	err = erw.WriteFile(relPath, newData)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	f2, err := root.Open(relPath)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	defer f2.Close()
 
 	content, err = io.ReadAll(f2)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, newData, content)
 }

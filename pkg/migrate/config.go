@@ -2,6 +2,7 @@ package migrate
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -62,11 +63,12 @@ func LoadOpenClawConfig(configPath string) (map[string]any, error) {
 	converted := convertKeysToSnake(raw)
 	result, ok := converted.(map[string]any)
 	if !ok {
-		return nil, fmt.Errorf("unexpected config format")
+		return nil, errors.New("unexpected config format")
 	}
 	return result, nil
 }
 
+//nolint:funlen,gocognit,gocyclo,maintidx,nestif // complex config conversion: maps all legacy fields to new schema
 func ConvertConfig(data map[string]any) (*config.Config, []string, error) {
 	cfg := config.DefaultConfig()
 	var warnings []string
@@ -241,6 +243,7 @@ func ConvertConfig(data map[string]any) (*config.Config, []string, error) {
 	return cfg, warnings, nil
 }
 
+//nolint:gocognit,gocyclo // merges all provider fields; one branch per provider
 func MergeConfig(existing, incoming *config.Config) *config.Config {
 	if existing.Providers.Anthropic.APIKey == "" {
 		existing.Providers.Anthropic = incoming.Providers.Anthropic
@@ -302,6 +305,7 @@ func MergeConfig(existing, incoming *config.Config) *config.Config {
 	return existing
 }
 
+//nolint:nestif // camelCase to snake_case: nested rune classification with lookahead
 func camelToSnake(s string) string {
 	var result strings.Builder
 	for i, r := range s {

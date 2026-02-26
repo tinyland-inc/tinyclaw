@@ -2,6 +2,7 @@ package channels
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -40,7 +41,7 @@ type slackMessageRef struct {
 
 func NewSlackChannel(cfg config.SlackConfig, messageBus *bus.MessageBus) (*SlackChannel, error) {
 	if cfg.BotToken == "" || cfg.AppToken == "" {
-		return nil, fmt.Errorf("slack bot_token and app_token are required")
+		return nil, errors.New("slack bot_token and app_token are required")
 	}
 
 	api := slack.New(
@@ -112,7 +113,7 @@ func (c *SlackChannel) Stop(ctx context.Context) error {
 
 func (c *SlackChannel) Send(ctx context.Context, msg bus.OutboundMessage) error {
 	if !c.IsRunning() {
-		return fmt.Errorf("slack channel not running")
+		return errors.New("slack channel not running")
 	}
 
 	channelID, threadTS := parseSlackChatID(msg.ChatID)
@@ -160,7 +161,7 @@ func (c *SlackChannel) eventLoop() {
 			}
 			switch event.Type {
 			case socketmode.EventTypeEventsAPI:
-				c.handleEventsAPI(event)
+				c.handleEventsAPI(c.ctx, event)
 			case socketmode.EventTypeSlashCommand:
 				c.handleSlashCommand(event)
 			case socketmode.EventTypeInteractive:
@@ -174,7 +175,7 @@ func (c *SlackChannel) eventLoop() {
 	}
 }
 
-func (c *SlackChannel) handleEventsAPI(event socketmode.Event) {
+func (c *SlackChannel) handleEventsAPI(ctx context.Context, event socketmode.Event) {
 	if event.Request != nil {
 		c.socketClient.Ack(*event.Request)
 	}
@@ -186,13 +187,14 @@ func (c *SlackChannel) handleEventsAPI(event socketmode.Event) {
 
 	switch ev := eventsAPIEvent.InnerEvent.Data.(type) {
 	case *slackevents.MessageEvent:
-		c.handleMessageEvent(ev)
+		c.handleMessageEvent(ctx, ev)
 	case *slackevents.AppMentionEvent:
 		c.handleAppMention(ev)
 	}
 }
 
-func (c *SlackChannel) handleMessageEvent(ev *slackevents.MessageEvent) {
+//nolint:funlen,gocognit,nestif // Slack message handler: file attachment and thread handling branches
+func (c *SlackChannel) handleMessageEvent(ctx context.Context, ev *slackevents.MessageEvent) {
 	if ev.User == c.botUserID || ev.User == "" {
 		return
 	}
@@ -250,6 +252,8 @@ func (c *SlackChannel) handleMessageEvent(ev *slackevents.MessageEvent) {
 	}()
 
 	if ev.Message != nil && len(ev.Message.Files) > 0 {
+		var sb strings.Builder
+		sb.WriteString(content)
 		for _, file := range ev.Message.Files {
 			localPath := c.downloadSlackFile(file)
 			if localPath == "" {
@@ -259,20 +263,21 @@ func (c *SlackChannel) handleMessageEvent(ev *slackevents.MessageEvent) {
 			mediaPaths = append(mediaPaths, localPath)
 
 			if utils.IsAudioFile(file.Name, file.Mimetype) && c.transcriber != nil && c.transcriber.IsAvailable() {
-				ctx, cancel := context.WithTimeout(c.ctx, 30*time.Second)
+				tCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 				defer cancel()
-				result, err := c.transcriber.Transcribe(ctx, localPath)
+				result, err := c.transcriber.Transcribe(tCtx, localPath)
 
 				if err != nil {
 					logger.ErrorCF("slack", "Voice transcription failed", map[string]any{"error": err.Error()})
-					content += fmt.Sprintf("\n[audio: %s (transcription failed)]", file.Name)
+					sb.WriteString("\n[audio: " + file.Name + " (transcription failed)]")
 				} else {
-					content += fmt.Sprintf("\n[voice transcription: %s]", result.Text)
+					sb.WriteString("\n[voice transcription: " + result.Text + "]")
 				}
 			} else {
-				content += fmt.Sprintf("\n[file: %s]", file.Name)
+				sb.WriteString("\n[file: " + file.Name + "]")
 			}
 		}
+		content = sb.String()
 	}
 
 	if strings.TrimSpace(content) == "" {

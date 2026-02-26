@@ -9,10 +9,12 @@ import (
 	"context"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -121,7 +123,7 @@ type PKCS7Padding struct{}
 // NewWeComAppChannel creates a new WeCom App channel instance
 func NewWeComAppChannel(cfg config.WeComAppConfig, messageBus *bus.MessageBus) (*WeComAppChannel, error) {
 	if cfg.CorpID == "" || cfg.CorpSecret == "" || cfg.AgentID == 0 {
-		return nil, fmt.Errorf("wecom_app corp_id, corp_secret and agent_id are required")
+		return nil, errors.New("wecom_app corp_id, corp_secret and agent_id are required")
 	}
 
 	base := NewBaseChannel("wecom_app", cfg, messageBus, cfg.AllowFrom)
@@ -211,12 +213,12 @@ func (c *WeComAppChannel) Stop(ctx context.Context) error {
 // Send sends a message to WeCom user proactively using access token
 func (c *WeComAppChannel) Send(ctx context.Context, msg bus.OutboundMessage) error {
 	if !c.IsRunning() {
-		return fmt.Errorf("wecom_app channel not running")
+		return errors.New("wecom_app channel not running")
 	}
 
 	accessToken := c.getAccessToken()
 	if accessToken == "" {
-		return fmt.Errorf("no valid access token available")
+		return errors.New("no valid access token available")
 	}
 
 	logger.DebugCF("wecom_app", "Sending message", map[string]any{
@@ -405,7 +407,7 @@ func (c *WeComAppChannel) processMessage(_ context.Context, msg WeComXMLMessage)
 
 	// Message deduplication: Use msg_id to prevent duplicate processing
 	// As per WeCom documentation, use msg_id for deduplication
-	msgID := fmt.Sprintf("%d", msg.MsgId)
+	msgID := strconv.FormatInt(msg.MsgId, 10)
 	c.msgMu.Lock()
 	if c.processedMsgs[msgID] {
 		c.msgMu.Unlock()
@@ -431,11 +433,11 @@ func (c *WeComAppChannel) processMessage(_ context.Context, msg WeComXMLMessage)
 	// WeCom App only supports direct messages (private chat)
 	metadata := map[string]string{
 		"msg_type":    msg.MsgType,
-		"msg_id":      fmt.Sprintf("%d", msg.MsgId),
-		"agent_id":    fmt.Sprintf("%d", msg.AgentID),
+		"msg_id":      strconv.FormatInt(msg.MsgId, 10),
+		"agent_id":    strconv.FormatInt(msg.AgentID, 10),
 		"platform":    "wecom_app",
 		"media_id":    msg.MediaId,
-		"create_time": fmt.Sprintf("%d", msg.CreateTime),
+		"create_time": strconv.FormatInt(msg.CreateTime, 10),
 		"peer_kind":   "direct",
 		"peer_id":     senderID,
 	}

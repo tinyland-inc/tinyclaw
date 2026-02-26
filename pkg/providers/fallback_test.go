@@ -3,7 +3,6 @@ package providers
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 	"time"
 )
@@ -113,7 +112,7 @@ func TestFallback_ContextCanceled(t *testing.T) {
 			return nil, context.Canceled
 		}
 		t.Error("should not reach second candidate after cancel")
-		return nil, fmt.Errorf("unreachable")
+		return nil, errors.New("unreachable")
 	}
 
 	_, err := fc.Execute(ctx, candidates, run)
@@ -208,7 +207,7 @@ func TestFallback_AllInCooldown(t *testing.T) {
 	_, err := fc.Execute(context.Background(), candidates,
 		func(ctx context.Context, provider, model string) (*LLMResponse, error) {
 			t.Error("should not call any provider (all in cooldown)")
-			return nil, fmt.Errorf("unreachable")
+			return nil, errors.New("unreachable")
 		})
 
 	if err == nil {

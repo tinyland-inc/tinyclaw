@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -18,6 +19,8 @@ const (
 )
 
 // createHTTPClient creates an HTTP client with optional proxy support
+//
+//nolint:nestif // proxy setup: nested scheme validation and transport configuration
 func createHTTPClient(proxyURL string, timeout time.Duration) (*http.Client, error) {
 	client := &http.Client{
 		Timeout: timeout,
@@ -44,7 +47,7 @@ func createHTTPClient(proxyURL string, timeout time.Duration) (*http.Client, err
 			)
 		}
 		if proxy.Host == "" {
-			return nil, fmt.Errorf("invalid proxy URL: missing host")
+			return nil, errors.New("invalid proxy URL: missing host")
 		}
 		if transport, ok := client.Transport.(*http.Transport); ok {
 			transport.Proxy = http.ProxyURL(proxy)
@@ -112,18 +115,18 @@ func (p *BraveSearchProvider) Search(ctx context.Context, query string, count in
 
 	results := searchResp.Web.Results
 	if len(results) == 0 {
-		return fmt.Sprintf("No results for: %s", query), nil
+		return "No results for: " + query, nil
 	}
 
 	var lines []string
-	lines = append(lines, fmt.Sprintf("Results for: %s", query))
+	lines = append(lines, "Results for: "+query)
 	for i, item := range results {
 		if i >= count {
 			break
 		}
 		lines = append(lines, fmt.Sprintf("%d. %s\n   %s", i+1, item.Title, item.URL))
 		if item.Description != "" {
-			lines = append(lines, fmt.Sprintf("   %s", item.Description))
+			lines = append(lines, "   "+item.Description)
 		}
 	}
 
@@ -198,18 +201,18 @@ func (p *TavilySearchProvider) Search(ctx context.Context, query string, count i
 
 	results := searchResp.Results
 	if len(results) == 0 {
-		return fmt.Sprintf("No results for: %s", query), nil
+		return "No results for: " + query, nil
 	}
 
 	var lines []string
-	lines = append(lines, fmt.Sprintf("Results for: %s (via Tavily)", query))
+	lines = append(lines, "Results for: "+query+" (via Tavily)")
 	for i, item := range results {
 		if i >= count {
 			break
 		}
 		lines = append(lines, fmt.Sprintf("%d. %s\n   %s", i+1, item.Title, item.URL))
 		if item.Content != "" {
-			lines = append(lines, fmt.Sprintf("   %s", item.Content))
+			lines = append(lines, "   "+item.Content)
 		}
 	}
 
@@ -221,7 +224,7 @@ type DuckDuckGoSearchProvider struct {
 }
 
 func (p *DuckDuckGoSearchProvider) Search(ctx context.Context, query string, count int) (string, error) {
-	searchURL := fmt.Sprintf("https://html.duckduckgo.com/html/?q=%s", url.QueryEscape(query))
+	searchURL := "https://html.duckduckgo.com/html/?q=" + url.QueryEscape(query)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, searchURL, nil)
 	if err != nil {
@@ -260,11 +263,11 @@ func (p *DuckDuckGoSearchProvider) extractResults(html string, count int, query 
 	matches := reLink.FindAllStringSubmatch(html, count+5)
 
 	if len(matches) == 0 {
-		return fmt.Sprintf("No results found or extraction failed. Query: %s", query), nil
+		return "No results found or extraction failed. Query: " + query, nil
 	}
 
 	var lines []string
-	lines = append(lines, fmt.Sprintf("Results for: %s (via DuckDuckGo)", query))
+	lines = append(lines, "Results for: "+query+" (via DuckDuckGo)")
 
 	// Pre-compile snippet regex to run inside the loop
 	// We'll search for snippets relative to the link position or just globally if needed
@@ -300,7 +303,7 @@ func (p *DuckDuckGoSearchProvider) extractResults(html string, count int, query 
 			snippet := stripTags(snippetMatches[i][1])
 			snippet = strings.TrimSpace(snippet)
 			if snippet != "" {
-				lines = append(lines, fmt.Sprintf("   %s", snippet))
+				lines = append(lines, "   "+snippet)
 			}
 		}
 	}
@@ -382,10 +385,10 @@ func (p *PerplexitySearchProvider) Search(ctx context.Context, query string, cou
 	}
 
 	if len(searchResp.Choices) == 0 {
-		return fmt.Sprintf("No results for: %s", query), nil
+		return "No results for: " + query, nil
 	}
 
-	return fmt.Sprintf("Results for: %s (via Perplexity)\n%s", query, searchResp.Choices[0].Message.Content), nil
+	return "Results for: " + query + " (via Perplexity)\n" + searchResp.Choices[0].Message.Content, nil
 }
 
 type WebSearchTool struct {
@@ -550,6 +553,7 @@ func (t *WebFetchTool) Parameters() map[string]any {
 	}
 }
 
+//nolint:funlen,gocognit,gocyclo // web fetch execute: URL validation, fetch, content extraction, and format selection
 func (t *WebFetchTool) Execute(ctx context.Context, args map[string]any) *ToolResult {
 	urlStr, ok := args["url"].(string)
 	if !ok {
@@ -591,7 +595,7 @@ func (t *WebFetchTool) Execute(ctx context.Context, args map[string]any) *ToolRe
 	// Configure redirect handling
 	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		if len(via) >= 5 {
-			return fmt.Errorf("stopped after 5 redirects")
+			return errors.New("stopped after 5 redirects")
 		}
 		return nil
 	}

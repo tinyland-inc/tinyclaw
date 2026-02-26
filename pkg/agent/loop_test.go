@@ -2,7 +2,7 @@ package agent
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"os"
 	"path/filepath"
 	"slices"
@@ -532,7 +532,7 @@ func TestAgentLoop_ContextExhaustionRetry(t *testing.T) {
 	msgBus := bus.NewMessageBus()
 
 	// Create a provider that fails once with a context error
-	contextErr := fmt.Errorf("InvalidParameter: Total tokens of image and text exceed max message tokens")
+	contextErr := errors.New("InvalidParameter: Total tokens of image and text exceed max message tokens")
 	provider := &failFirstMockProvider{
 		failures:    1,
 		failError:   contextErr,

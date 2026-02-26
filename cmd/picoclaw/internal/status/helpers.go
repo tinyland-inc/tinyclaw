@@ -8,6 +8,7 @@ import (
 	"github.com/tinyland-inc/picoclaw/pkg/auth"
 )
 
+//nolint:funlen,gocognit,nestif // status display: many provider checks in sequence
 func statusCmd() {
 	cfg, err := internal.LoadConfig()
 	if err != nil {

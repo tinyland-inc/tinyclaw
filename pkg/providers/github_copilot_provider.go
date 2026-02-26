@@ -3,6 +3,7 @@ package providers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -26,7 +27,7 @@ func NewGitHubCopilotProvider(uri string, connectMode string, model string) (*Gi
 
 	switch connectMode {
 	case "stdio":
-		return nil, fmt.Errorf("stdio mode not implemented")
+		return nil, errors.New("stdio mode not implemented")
 	case "grpc":
 		client := copilot.NewClient(&copilot.ClientOptions{
 			CLIUrl: uri,
@@ -96,7 +97,7 @@ func (p *GitHubCopilotProvider) Chat(
 	p.mu.Unlock()
 
 	if session == nil {
-		return nil, fmt.Errorf("provider closed")
+		return nil, errors.New("provider closed")
 	}
 
 	resp, _ := session.SendAndWait(ctx, copilot.MessageOptions{
@@ -104,10 +105,10 @@ func (p *GitHubCopilotProvider) Chat(
 	})
 
 	if resp == nil {
-		return nil, fmt.Errorf("empty response from copilot")
+		return nil, errors.New("empty response from copilot")
 	}
 	if resp.Data.Content == nil {
-		return nil, fmt.Errorf("no content in copilot response")
+		return nil, errors.New("no content in copilot response")
 	}
 	content := *resp.Data.Content
 

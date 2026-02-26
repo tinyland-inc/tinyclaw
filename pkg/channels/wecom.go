@@ -12,8 +12,10 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -94,7 +96,7 @@ type WeComBotReplyMessage struct {
 // NewWeComBotChannel creates a new WeCom Bot channel instance
 func NewWeComBotChannel(cfg config.WeComConfig, messageBus *bus.MessageBus) (*WeComBotChannel, error) {
 	if cfg.Token == "" || cfg.WebhookURL == "" {
-		return nil, fmt.Errorf("wecom token and webhook_url are required")
+		return nil, errors.New("wecom token and webhook_url are required")
 	}
 
 	base := NewBaseChannel("wecom", cfg, messageBus, cfg.AllowFrom)
@@ -176,7 +178,7 @@ func (c *WeComBotChannel) Stop(ctx context.Context) error {
 // For delayed responses, we use the webhook URL
 func (c *WeComBotChannel) Send(ctx context.Context, msg bus.OutboundMessage) error {
 	if !c.IsRunning() {
-		return fmt.Errorf("wecom channel not running")
+		return errors.New("wecom channel not running")
 	}
 
 	logger.DebugCF("wecom", "Sending message via webhook", map[string]any{
@@ -319,6 +321,8 @@ func (c *WeComBotChannel) handleMessageCallback(ctx context.Context, w http.Resp
 }
 
 // processMessage processes the received message
+//
+//nolint:funlen // message type dispatch with media handling
 func (c *WeComBotChannel) processMessage(_ context.Context, msg WeComBotMessage) {
 	// Skip unsupported message types
 	if msg.MsgType != "text" && msg.MsgType != "image" && msg.MsgType != "voice" && msg.MsgType != "file" &&
@@ -377,11 +381,13 @@ func (c *WeComBotChannel) processMessage(_ context.Context, msg WeComBotMessage)
 		content = msg.Voice.Content // Voice to text content
 	case "mixed":
 		// For mixed messages, concatenate text items
+		var mixedSB strings.Builder
 		for _, item := range msg.Mixed.MsgItem {
 			if item.MsgType == "text" {
-				content += item.Text.Content
+				mixedSB.WriteString(item.Text.Content)
 			}
 		}
+		content = mixedSB.String()
 	case "image", "file":
 		// For image and file, we don't have text content
 		content = ""
@@ -500,7 +506,7 @@ func WeComVerifySignature(token, msgSignature, timestamp, nonce, msgEncrypt stri
 
 	// SHA1 hash
 	hash := sha1.Sum([]byte(str))
-	expectedSignature := fmt.Sprintf("%x", hash)
+	expectedSignature := hex.EncodeToString(hash[:])
 
 	return expectedSignature == msgSignature
 }
@@ -543,7 +549,7 @@ func WeComDecryptMessageWithVerify(encryptedMsg, encodingAESKey, receiveid strin
 	}
 
 	if len(cipherText) < aes.BlockSize {
-		return "", fmt.Errorf("ciphertext too short")
+		return "", errors.New("ciphertext too short")
 	}
 
 	// IV is the first 16 bytes of AESKey
@@ -561,12 +567,12 @@ func WeComDecryptMessageWithVerify(encryptedMsg, encodingAESKey, receiveid strin
 	// Parse message structure
 	// Format: random(16) + msg_len(4) + msg + receiveid
 	if len(plainText) < 20 {
-		return "", fmt.Errorf("decrypted message too short")
+		return "", errors.New("decrypted message too short")
 	}
 
 	msgLen := binary.BigEndian.Uint32(plainText[16:20])
 	if int(msgLen) > len(plainText)-20 {
-		return "", fmt.Errorf("invalid message length")
+		return "", errors.New("invalid message length")
 	}
 
 	msg := plainText[20 : 20+msgLen]
@@ -596,7 +602,7 @@ func pkcs7UnpadWeCom(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("invalid padding size: %d", padding)
 	}
 	if padding > len(data) {
-		return nil, fmt.Errorf("padding size larger than data")
+		return nil, errors.New("padding size larger than data")
 	}
 	// Verify all padding bytes
 	for i := range padding {

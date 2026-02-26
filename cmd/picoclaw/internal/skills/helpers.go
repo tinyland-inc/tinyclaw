@@ -163,6 +163,7 @@ func skillsInstallBuiltinCmd(workspace string) {
 	fmt.Println("Now you can use them in your workspace.")
 }
 
+//nolint:gocognit,nestif // lists builtin skills with nested directory traversal
 func skillsListBuiltinCmd() {
 	cfg, err := internal.LoadConfig()
 	if err != nil {

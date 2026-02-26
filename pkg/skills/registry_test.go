@@ -2,11 +2,13 @@ package skills
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/tinyland-inc/picoclaw/pkg/utils"
 )
@@ -47,7 +49,7 @@ func TestRegistryManagerSearchAllSingle(t *testing.T) {
 	})
 
 	results, err := mgr.SearchAll(context.Background(), "test query", 10)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, results, 2)
 	assert.Equal(t, "skill-a", results[0].Slug)
 }
@@ -68,7 +70,7 @@ func TestRegistryManagerSearchAllMultiple(t *testing.T) {
 	})
 
 	results, err := mgr.SearchAll(context.Background(), "test query", 10)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, results, 2)
 	// Should be sorted by score descending
 	assert.Equal(t, "skill-b", results[0].Slug)
@@ -79,7 +81,7 @@ func TestRegistryManagerSearchAllOneFailsGracefully(t *testing.T) {
 	mgr := NewRegistryManager()
 	mgr.AddRegistry(&mockRegistry{
 		name:      "failing",
-		searchErr: fmt.Errorf("network error"),
+		searchErr: errors.New("network error"),
 	})
 	mgr.AddRegistry(&mockRegistry{
 		name: "working",
@@ -89,7 +91,7 @@ func TestRegistryManagerSearchAllOneFailsGracefully(t *testing.T) {
 	})
 
 	results, err := mgr.SearchAll(context.Background(), "test query", 10)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, results, 1)
 	assert.Equal(t, "skill-a", results[0].Slug)
 }
@@ -98,7 +100,7 @@ func TestRegistryManagerSearchAllAllFail(t *testing.T) {
 	mgr := NewRegistryManager()
 	mgr.AddRegistry(&mockRegistry{
 		name:      "fail-1",
-		searchErr: fmt.Errorf("error 1"),
+		searchErr: errors.New("error 1"),
 	})
 
 	_, err := mgr.SearchAll(context.Background(), "test query", 10)
@@ -128,7 +130,7 @@ func TestRegistryManagerSearchAllRespectLimit(t *testing.T) {
 	mgr := NewRegistryManager()
 	results := make([]SearchResult, 20)
 	for i := range results {
-		results[i] = SearchResult{Slug: fmt.Sprintf("skill-%d", i), Score: float64(20 - i)}
+		results[i] = SearchResult{Slug: "skill-" + strconv.Itoa(i), Score: float64(20 - i)}
 	}
 	mgr.AddRegistry(&mockRegistry{
 		name:          "test",
@@ -136,7 +138,7 @@ func TestRegistryManagerSearchAllRespectLimit(t *testing.T) {
 	})
 
 	got, err := mgr.SearchAll(context.Background(), "test", 5)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, got, 5)
 	// Top scores first
 	assert.Equal(t, "skill-0", got[0].Slug)
@@ -151,7 +153,7 @@ func TestRegistryManagerSearchAllTimeout(t *testing.T) {
 	mgr := NewRegistryManager()
 	mgr.AddRegistry(&mockRegistry{
 		name:      "slow",
-		searchErr: fmt.Errorf("context deadline exceeded"),
+		searchErr: errors.New("context deadline exceeded"),
 	})
 
 	_, err := mgr.SearchAll(ctx, "test", 5)
@@ -173,8 +175,8 @@ func TestSortByScoreDesc(t *testing.T) {
 func TestIsSafeSlug(t *testing.T) {
 	assert.NoError(t, utils.ValidateSkillIdentifier("github"))
 	assert.NoError(t, utils.ValidateSkillIdentifier("docker-compose"))
-	assert.Error(t, utils.ValidateSkillIdentifier(""))
-	assert.Error(t, utils.ValidateSkillIdentifier("../etc/passwd"))
-	assert.Error(t, utils.ValidateSkillIdentifier("path/traversal"))
+	require.Error(t, utils.ValidateSkillIdentifier(""))
+	require.Error(t, utils.ValidateSkillIdentifier("../etc/passwd"))
+	require.Error(t, utils.ValidateSkillIdentifier("path/traversal"))
 	assert.Error(t, utils.ValidateSkillIdentifier("path\\traversal"))
 }

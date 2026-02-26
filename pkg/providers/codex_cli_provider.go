@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -29,7 +30,7 @@ func (p *CodexCliProvider) Chat(
 	ctx context.Context, messages []Message, tools []ToolDefinition, model string, options map[string]any,
 ) (*LLMResponse, error) {
 	if p.command == "" {
-		return nil, fmt.Errorf("codex command not configured")
+		return nil, errors.New("codex command not configured")
 	}
 
 	prompt := p.buildPrompt(messages, tools)

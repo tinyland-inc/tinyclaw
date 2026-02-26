@@ -80,7 +80,7 @@ func (t *I2CTool) scan(args map[string]any) *ToolResult {
 		return errResult
 	}
 
-	devPath := fmt.Sprintf("/dev/i2c-%s", bus)
+	devPath := "/dev/i2c-" + bus
 	fd, err := syscall.Open(devPath, syscall.O_RDWR, 0)
 	if err != nil {
 		return ErrorResult(fmt.Sprintf("failed to open %s: %v (check permissions and i2c-dev module)", devPath, err))
@@ -166,7 +166,7 @@ func (t *I2CTool) readDevice(args map[string]any) *ToolResult {
 		return ErrorResult("length must be between 1 and 256")
 	}
 
-	devPath := fmt.Sprintf("/dev/i2c-%s", bus)
+	devPath := "/dev/i2c-" + bus
 	fd, err := syscall.Open(devPath, syscall.O_RDWR, 0)
 	if err != nil {
 		return ErrorResult(fmt.Sprintf("failed to open %s: %v", devPath, err))
@@ -269,7 +269,7 @@ func (t *I2CTool) writeDevice(args map[string]any) *ToolResult {
 		data = append(data, byte(b))
 	}
 
-	devPath := fmt.Sprintf("/dev/i2c-%s", bus)
+	devPath := "/dev/i2c-" + bus
 	fd, err := syscall.Open(devPath, syscall.O_RDWR, 0)
 	if err != nil {
 		return ErrorResult(fmt.Sprintf("failed to open %s: %v", devPath, err))

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -16,12 +17,12 @@ func LoginPasteToken(provider string, r io.Reader) (*AuthCredential, error) {
 		if err := scanner.Err(); err != nil {
 			return nil, fmt.Errorf("reading token: %w", err)
 		}
-		return nil, fmt.Errorf("no input received")
+		return nil, errors.New("no input received")
 	}
 
 	token := strings.TrimSpace(scanner.Text())
 	if token == "" {
-		return nil, fmt.Errorf("token cannot be empty")
+		return nil, errors.New("token cannot be empty")
 	}
 
 	return &AuthCredential{

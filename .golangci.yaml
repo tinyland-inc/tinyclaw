@@ -28,23 +28,14 @@ linters:
     - wsl_v5
 
     # Disabled: need codebase-wide fixes before enabling
-    - contextcheck
     - errcheck
     - forbidigo
-    - funlen
-    - gocognit
     - goconst
-    - gocyclo
     - gosec
     - lll
-    - maintidx
     - mnd
-    - nestif
     - paralleltest
-    - perfsprint
     - revive
-    - tagalign
-    - testifylint
   settings:
     errcheck:
       check-type-assertions: true
@@ -129,6 +120,9 @@ linters:
       - linters:
           - nolintlint
         path: 'pkg/tools/(i2c\.go|spi\.go)$'
+      - linters:
+          - perfsprint
+        path: 'codex_cli_credentials\.go$'
 
 issues:
   max-issues-per-linter: 0

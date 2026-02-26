@@ -15,7 +15,7 @@ func TestNewMigrateCommand(t *testing.T) {
 	assert.Equal(t, "migrate", cmd.Use)
 	assert.Equal(t, "Migrate configuration between formats", cmd.Short)
 
-	assert.Len(t, cmd.Aliases, 0)
+	assert.Empty(t, cmd.Aliases)
 
 	assert.True(t, cmd.HasExample())
 	assert.True(t, cmd.HasSubCommands())

@@ -101,6 +101,7 @@ func (p *Provider) BaseURL() string {
 	return p.baseURL
 }
 
+//nolint:funlen,gocognit,gocyclo // builds Anthropic API params: maps all message roles and tool definitions
 func buildParams(
 	messages []Message,
 	tools []ToolDefinition,

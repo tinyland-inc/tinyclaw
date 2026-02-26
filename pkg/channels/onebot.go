@@ -3,6 +3,7 @@ package channels
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -134,7 +135,7 @@ func (c *OneBotChannel) setMsgEmojiLike(messageID string, emojiID int, set bool)
 
 func (c *OneBotChannel) Start(ctx context.Context) error {
 	if c.config.WSUrl == "" {
-		return fmt.Errorf("OneBot ws_url not configured")
+		return errors.New("OneBot ws_url not configured")
 	}
 
 	logger.InfoCF("onebot", "Starting OneBot channel", map[string]any{
@@ -155,7 +156,7 @@ func (c *OneBotChannel) Start(ctx context.Context) error {
 	if c.config.ReconnectInterval > 0 {
 		go c.reconnectLoop()
 	} else if c.conn == nil {
-		return fmt.Errorf("failed to connect to OneBot and reconnect is disabled")
+		return errors.New("failed to connect to OneBot and reconnect is disabled")
 	}
 
 	c.setRunning(true)
@@ -271,7 +272,7 @@ func (c *OneBotChannel) sendAPIRequest(action string, params any, timeout time.D
 	c.mu.Unlock()
 
 	if conn == nil {
-		return nil, fmt.Errorf("WebSocket not connected")
+		return nil, errors.New("WebSocket not connected")
 	}
 
 	echo := fmt.Sprintf("api_%d_%d", time.Now().UnixNano(), atomic.AddInt64(&c.echoCounter, 1))
@@ -312,7 +313,7 @@ func (c *OneBotChannel) sendAPIRequest(action string, params any, timeout time.D
 	case <-time.After(timeout):
 		return nil, fmt.Errorf("API request %s timed out after %v", action, timeout)
 	case <-c.ctx.Done():
-		return nil, fmt.Errorf("context canceled")
+		return nil, errors.New("context canceled")
 	}
 }
 
@@ -370,7 +371,7 @@ func (c *OneBotChannel) Stop(ctx context.Context) error {
 
 func (c *OneBotChannel) Send(ctx context.Context, msg bus.OutboundMessage) error {
 	if !c.IsRunning() {
-		return fmt.Errorf("OneBot channel not running")
+		return errors.New("OneBot channel not running")
 	}
 
 	c.mu.Lock()
@@ -378,7 +379,7 @@ func (c *OneBotChannel) Send(ctx context.Context, msg bus.OutboundMessage) error
 	c.mu.Unlock()
 
 	if conn == nil {
-		return fmt.Errorf("OneBot WebSocket not connected")
+		return errors.New("OneBot WebSocket not connected")
 	}
 
 	action, params, err := c.buildSendRequest(msg)
@@ -460,6 +461,7 @@ func (c *OneBotChannel) buildSendRequest(msg bus.OutboundMessage) (string, any, 
 	return action, map[string]any{idKey: id, "message": segments}, nil
 }
 
+//nolint:gocognit // WebSocket listen loop: reconnect logic with multiple error paths
 func (c *OneBotChannel) listen() {
 	c.mu.Lock()
 	conn := c.conn
@@ -532,7 +534,7 @@ func (c *OneBotChannel) listen() {
 				continue
 			}
 
-			c.handleRawEvent(&raw)
+			c.handleRawEvent(c.ctx, &raw)
 		}
 	}
 }
@@ -574,7 +576,12 @@ type parseMessageResult struct {
 	ReplyTo        string
 }
 
-func (c *OneBotChannel) parseMessageSegments(raw json.RawMessage, selfID int64) parseMessageResult {
+//nolint:funlen,gocognit,gocyclo,nestif // parses all OneBot message segment types; one case per segment kind
+func (c *OneBotChannel) parseMessageSegments(
+	ctx context.Context,
+	raw json.RawMessage,
+	selfID int64,
+) parseMessageResult {
 	if len(raw) == 0 {
 		return parseMessageResult{}
 	}
@@ -657,7 +664,7 @@ func (c *OneBotChannel) parseMessageSegments(raw json.RawMessage, selfID int64) 
 					if localPath != "" {
 						localFiles = append(localFiles, localPath)
 						if c.transcriber != nil && c.transcriber.IsAvailable() {
-							tctx, tcancel := context.WithTimeout(c.ctx, 30*time.Second)
+							tctx, tcancel := context.WithTimeout(ctx, 30*time.Second)
 							result, err := c.transcriber.Transcribe(tctx, localPath)
 							tcancel()
 							if err != nil {
@@ -706,7 +713,7 @@ func (c *OneBotChannel) parseMessageSegments(raw json.RawMessage, selfID int64) 
 	}
 }
 
-func (c *OneBotChannel) handleRawEvent(raw *oneBotRawEvent) {
+func (c *OneBotChannel) handleRawEvent(ctx context.Context, raw *oneBotRawEvent) {
 	switch raw.PostType {
 	case "message":
 		if userID, err := parseJSONInt64(raw.UserID); err == nil && userID > 0 {
@@ -717,7 +724,7 @@ func (c *OneBotChannel) handleRawEvent(raw *oneBotRawEvent) {
 				return
 			}
 		}
-		c.handleMessage(raw)
+		c.handleMessage(ctx, raw)
 
 	case "message_sent":
 		logger.DebugCF("onebot", "Bot sent message event", map[string]any{
@@ -774,7 +781,8 @@ func (c *OneBotChannel) handleNoticeEvent(raw *oneBotRawEvent) {
 	}
 }
 
-func (c *OneBotChannel) handleMessage(raw *oneBotRawEvent) {
+//nolint:funlen,gocognit,gocyclo // handles incoming OneBot events: parses fields and routes by message type
+func (c *OneBotChannel) handleMessage(ctx context.Context, raw *oneBotRawEvent) {
 	// Parse fields from raw event
 	userID, err := parseJSONInt64(raw.UserID)
 	if err != nil {
@@ -793,7 +801,7 @@ func (c *OneBotChannel) handleMessage(raw *oneBotRawEvent) {
 		selfID = atomic.LoadInt64(&c.selfID)
 	}
 
-	parsed := c.parseMessageSegments(raw.Message, selfID)
+	parsed := c.parseMessageSegments(ctx, raw.Message, selfID)
 	isBotMentioned := parsed.IsBotMentioned
 
 	content := raw.RawMessage

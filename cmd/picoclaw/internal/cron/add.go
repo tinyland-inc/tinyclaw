@@ -1,6 +1,7 @@
 package cron
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -25,7 +26,7 @@ func newAddCommand(storePath func() string) *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if every <= 0 && cronExp == "" {
-				return fmt.Errorf("either --every or --cron must be specified")
+				return errors.New("either --every or --cron must be specified")
 			}
 
 			var schedule cron.CronSchedule

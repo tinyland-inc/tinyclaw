@@ -6,6 +6,8 @@
 package config
 
 // DefaultConfig returns the default configuration for PicoClaw.
+//
+//nolint:funlen,maintidx // large default config struct: enumerates all default values
 func DefaultConfig() *Config {
 	return &Config{
 		Agents: AgentsConfig{

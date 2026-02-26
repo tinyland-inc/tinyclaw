@@ -5,6 +5,7 @@ package channels
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -35,7 +36,7 @@ type DingTalkChannel struct {
 // NewDingTalkChannel creates a new DingTalk channel instance
 func NewDingTalkChannel(cfg config.DingTalkConfig, messageBus *bus.MessageBus) (*DingTalkChannel, error) {
 	if cfg.ClientID == "" || cfg.ClientSecret == "" {
-		return nil, fmt.Errorf("dingtalk client_id and client_secret are required")
+		return nil, errors.New("dingtalk client_id and client_secret are required")
 	}
 
 	base := NewBaseChannel("dingtalk", cfg, messageBus, cfg.AllowFrom)
@@ -66,8 +67,10 @@ func (c *DingTalkChannel) Start(ctx context.Context) error {
 	// Register chatbot callback handler (IChatBotMessageHandler is a function type)
 	c.streamClient.RegisterChatBotCallbackRouter(c.onChatBotMessageReceived)
 
-	// Start the stream client
-	if err := c.streamClient.Start(c.ctx); err != nil {
+	// Start the stream client (c.ctx is derived from ctx via WithCancel above)
+	if err := c.streamClient.Start( //nolint:contextcheck // c.ctx derived from ctx via WithCancel
+		c.ctx,
+	); err != nil {
 		return fmt.Errorf("failed to start stream client: %w", err)
 	}
 
@@ -96,7 +99,7 @@ func (c *DingTalkChannel) Stop(ctx context.Context) error {
 // Send sends a message to DingTalk via the chatbot reply API
 func (c *DingTalkChannel) Send(ctx context.Context, msg bus.OutboundMessage) error {
 	if !c.IsRunning() {
-		return fmt.Errorf("dingtalk channel not running")
+		return errors.New("dingtalk channel not running")
 	}
 
 	// Get session webhook from storage

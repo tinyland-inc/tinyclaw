@@ -154,6 +154,7 @@ func sanitizeFilename(key string) string {
 	return strings.ReplaceAll(key, ":", "_")
 }
 
+//nolint:funlen // session save: serializes all message types and writes to storage
 func (sm *SessionManager) Save(key string) error {
 	if sm.storage == "" {
 		return nil

@@ -35,6 +35,7 @@ type providerSelection struct {
 	enableWebSearch bool
 }
 
+//nolint:funlen,gocognit,gocyclo,maintidx,nestif // provider resolution: large switch over all provider/model combinations
 func resolveProviderSelection(cfg *config.Config) (providerSelection, error) {
 	model := cfg.Agents.Defaults.GetModelName()
 	providerName := strings.ToLower(cfg.Agents.Defaults.Provider)

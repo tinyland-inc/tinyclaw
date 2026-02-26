@@ -73,6 +73,7 @@ func NewExecTool(workingDir string, restrict bool) *ExecTool {
 	return NewExecToolWithConfig(workingDir, restrict, nil)
 }
 
+//nolint:nestif // config initialization: nested deny pattern and option checks
 func NewExecToolWithConfig(workingDir string, restrict bool, config *config.Config) *ExecTool {
 	denyPatterns := make([]*regexp.Regexp, 0)
 
@@ -134,6 +135,7 @@ func (t *ExecTool) Parameters() map[string]any {
 	}
 }
 
+//nolint:funlen,gocognit,gocyclo // shell execute: command guard, cwd resolution, output capture
 func (t *ExecTool) Execute(ctx context.Context, args map[string]any) *ToolResult {
 	command, ok := args["command"].(string)
 	if !ok {
@@ -255,6 +257,7 @@ func (t *ExecTool) Execute(ctx context.Context, args map[string]any) *ToolResult
 	}
 }
 
+//nolint:gocognit,nestif // command guard: nested checks for dangerous patterns and workspace boundaries
 func (t *ExecTool) guardCommand(command, cwd string) string {
 	cmd := strings.TrimSpace(command)
 	lower := strings.ToLower(cmd)

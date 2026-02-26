@@ -86,7 +86,7 @@ func TestClawHubRegistryGetSkillMeta(t *testing.T) {
 func TestClawHubRegistryGetSkillMetaUnsafeSlug(t *testing.T) {
 	reg := newTestRegistry("https://example.com", "")
 	_, err := reg.GetSkillMeta(context.Background(), "../etc/passwd")
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid slug")
 }
 
@@ -167,7 +167,7 @@ func TestExtractZipPathTraversal(t *testing.T) {
 
 	tmpDir := t.TempDir()
 	err = utils.ExtractZipFile(tmpZip, tmpDir)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "unsafe path")
 }
 
@@ -203,7 +203,7 @@ func TestClawHubRegistrySearchHTTPError(t *testing.T) {
 
 	reg := newTestRegistry(srv.URL, "")
 	_, err := reg.Search(context.Background(), "test", 5)
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "500")
 }
 

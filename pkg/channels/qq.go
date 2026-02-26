@@ -2,6 +2,7 @@ package channels
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -43,7 +44,7 @@ func NewQQChannel(cfg config.QQConfig, messageBus *bus.MessageBus) (*QQChannel, 
 
 func (c *QQChannel) Start(ctx context.Context) error {
 	if c.config.AppID == "" || c.config.AppSecret == "" {
-		return fmt.Errorf("QQ app_id and app_secret not configured")
+		return errors.New("QQ app_id and app_secret not configured")
 	}
 
 	logger.InfoC("qq", "Starting QQ bot (WebSocket mode)")
@@ -58,8 +59,11 @@ func (c *QQChannel) Start(ctx context.Context) error {
 	// create child context
 	c.ctx, c.cancel = context.WithCancel(ctx)
 
-	// start auto-refresh token goroutine
-	if err := token.StartRefreshAccessToken(c.ctx, c.tokenSource); err != nil {
+	// start auto-refresh token goroutine (c.ctx is derived from ctx via WithCancel above)
+	if err := token.StartRefreshAccessToken( //nolint:contextcheck // c.ctx derived from ctx via WithCancel
+		c.ctx,
+		c.tokenSource,
+	); err != nil {
 		return fmt.Errorf("failed to start token refresh: %w", err)
 	}
 
@@ -73,7 +77,7 @@ func (c *QQChannel) Start(ctx context.Context) error {
 	)
 
 	// get WebSocket endpoint
-	wsInfo, err := c.api.WS(c.ctx, nil, "")
+	wsInfo, err := c.api.WS(c.ctx, nil, "") //nolint:contextcheck // c.ctx is derived from the Start ctx parameter
 	if err != nil {
 		return fmt.Errorf("failed to get websocket info: %w", err)
 	}
@@ -114,7 +118,7 @@ func (c *QQChannel) Stop(ctx context.Context) error {
 
 func (c *QQChannel) Send(ctx context.Context, msg bus.OutboundMessage) error {
 	if !c.IsRunning() {
-		return fmt.Errorf("QQ bot not running")
+		return errors.New("QQ bot not running")
 	}
 
 	// construct message

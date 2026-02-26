@@ -3,6 +3,7 @@ package channels
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -87,7 +88,7 @@ func (c *WhatsAppChannel) Send(ctx context.Context, msg bus.OutboundMessage) err
 	defer c.mu.Unlock()
 
 	if c.conn == nil {
-		return fmt.Errorf("whatsapp connection not established")
+		return errors.New("whatsapp connection not established")
 	}
 
 	payload := map[string]any{

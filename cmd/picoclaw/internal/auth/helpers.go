@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -191,6 +192,7 @@ func fetchGoogleUserEmail(accessToken string) (string, error) {
 	return userInfo.Email, nil
 }
 
+//nolint:gocognit,nestif // handles multiple provider branches with config updates
 func authLoginPasteToken(provider string) error {
 	cred, err := auth.LoginPasteToken(provider, os.Stdin)
 	if err != nil {
@@ -259,6 +261,7 @@ func authLoginPasteToken(provider string) error {
 	return nil
 }
 
+//nolint:gocognit,nestif // logout iterates all providers with nested config cleanup
 func authLogoutCmd(provider string) error {
 	if provider != "" {
 		if err := auth.DeleteCredential(provider); err != nil {
@@ -368,7 +371,7 @@ func authStatusCmd() error {
 func authModelsCmd() error {
 	cred, err := auth.GetCredential("google-antigravity")
 	if err != nil {
-		return fmt.Errorf(
+		return errors.New(
 			"not logged in to Google Antigravity.\nrun: picoclaw auth login --provider google-antigravity",
 		)
 	}
@@ -385,7 +388,7 @@ func authModelsCmd() error {
 
 	projectID := cred.ProjectID
 	if projectID == "" {
-		return fmt.Errorf("no project id stored. Try logging in again")
+		return errors.New("no project id stored. Try logging in again")
 	}
 
 	fmt.Printf("Fetching models for project: %s\n\n", projectID)
@@ -396,7 +399,7 @@ func authModelsCmd() error {
 	}
 
 	if len(models) == 0 {
-		return fmt.Errorf("no models available")
+		return errors.New("no models available")
 	}
 
 	fmt.Println("Available Antigravity Models:")

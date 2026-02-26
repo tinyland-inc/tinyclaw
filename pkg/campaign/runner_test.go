@@ -27,7 +27,7 @@ func (a *testAdapter) Execute(_ context.Context, agentID, prompt string, _ []str
 	if resp, ok := a.responses[prompt]; ok {
 		return resp, nil
 	}
-	return fmt.Sprintf("processed by %s", a.name), nil
+	return "processed by " + a.name, nil
 }
 
 func (a *testAdapter) Name() string { return a.name }

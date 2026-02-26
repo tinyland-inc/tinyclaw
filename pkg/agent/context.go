@@ -98,11 +98,11 @@ func (cb *ContextBuilder) BuildSystemPrompt() string {
 	// Skills - show summary, AI can read full content with read_file tool
 	skillsSummary := cb.skillsLoader.BuildSkillsSummary()
 	if skillsSummary != "" {
-		parts = append(parts, fmt.Sprintf(`# Skills
+		parts = append(parts, `# Skills
 
 The following skills extend your capabilities. To use a skill, read its SKILL.md file using the read_file tool.
 
-%s`, skillsSummary))
+`+skillsSummary)
 	}
 
 	// Memory context
@@ -475,6 +475,7 @@ func (cb *ContextBuilder) BuildMessages(
 	return messages
 }
 
+//nolint:gocognit // sanitizes history: many role/content-type branches
 func sanitizeHistoryForProvider(history []providers.Message) []providers.Message {
 	if len(history) == 0 {
 		return history

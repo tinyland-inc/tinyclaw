@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -70,7 +71,7 @@ func (p *Provider) Chat(
 	options map[string]any,
 ) (*LLMResponse, error) {
 	if p.apiBase == "" {
-		return nil, fmt.Errorf("API base not configured")
+		return nil, errors.New("API base not configured")
 	}
 
 	model = normalizeModel(model, p.apiBase)

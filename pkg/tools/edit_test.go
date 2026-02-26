@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // TestEditTool_EditFile_Success verifies successful file editing
@@ -336,7 +337,7 @@ func TestReplaceEditContent(t *testing.T) {
 			if tt.expectError {
 				assert.Error(t, err)
 			} else {
-				assert.NoError(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tt.expected, result)
 			}
 		})
@@ -366,7 +367,7 @@ func TestAppendFileTool_AppendToNonExistent_Restricted(t *testing.T) {
 
 	// Verify the file was created with correct content
 	data, err := os.ReadFile(filepath.Join(workspace, "brand_new_file.txt"))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "first content", string(data))
 }
 
@@ -376,7 +377,7 @@ func TestAppendFileTool_Restricted_Success(t *testing.T) {
 	workspace := t.TempDir()
 	testFile := "existing.txt"
 	err := os.WriteFile(filepath.Join(workspace, testFile), []byte("initial"), 0o644)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	tool := NewAppendFileTool(workspace, true)
 	ctx := context.Background()
@@ -390,7 +391,7 @@ func TestAppendFileTool_Restricted_Success(t *testing.T) {
 	assert.True(t, result.Silent)
 
 	data, err := os.ReadFile(filepath.Join(workspace, testFile))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "initial appended", string(data))
 }
 
@@ -400,7 +401,7 @@ func TestEditFileTool_Restricted_InPlaceEdit(t *testing.T) {
 	workspace := t.TempDir()
 	testFile := "edit_target.txt"
 	err := os.WriteFile(filepath.Join(workspace, testFile), []byte("Hello World"), 0o644)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	tool := NewEditFileTool(workspace, true)
 	ctx := context.Background()
@@ -415,7 +416,7 @@ func TestEditFileTool_Restricted_InPlaceEdit(t *testing.T) {
 	assert.True(t, result.Silent)
 
 	data, err := os.ReadFile(filepath.Join(workspace, testFile))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, "Hello Go", string(data))
 }
 

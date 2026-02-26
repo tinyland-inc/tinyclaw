@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -109,7 +110,7 @@ func (sm *SubagentManager) Spawn(
 	if label != "" {
 		return fmt.Sprintf("Spawned subagent '%s' for task: %s", label, task), nil
 	}
-	return fmt.Sprintf("Spawned subagent for task: %s", task), nil
+	return "Spawned subagent for task: " + task, nil
 }
 
 func (sm *SubagentManager) runTask(ctx context.Context, task *SubagentTask, callback AsyncCallback) {
@@ -220,7 +221,7 @@ After completing the task, provide a clear summary of what was done.`
 		announceContent := fmt.Sprintf("Task '%s' completed.\n\nResult:\n%s", task.Label, task.Result)
 		sm.bus.PublishInbound(bus.InboundMessage{
 			Channel:  "system",
-			SenderID: fmt.Sprintf("subagent:%s", task.ID),
+			SenderID: "subagent:" + task.ID,
 			// Format: "original_channel:original_chat_id" for routing back
 			ChatID:  fmt.Sprintf("%s:%s", task.OriginChannel, task.OriginChatID),
 			Content: announceContent,
@@ -296,13 +297,13 @@ func (t *SubagentTool) SetContext(channel, chatID string) {
 func (t *SubagentTool) Execute(ctx context.Context, args map[string]any) *ToolResult {
 	task, ok := args["task"].(string)
 	if !ok {
-		return ErrorResult("task is required").WithError(fmt.Errorf("task parameter is required"))
+		return ErrorResult("task is required").WithError(errors.New("task parameter is required"))
 	}
 
 	label, _ := args["label"].(string)
 
 	if t.manager == nil {
-		return ErrorResult("Subagent manager not configured").WithError(fmt.Errorf("manager is nil"))
+		return ErrorResult("Subagent manager not configured").WithError(errors.New("manager is nil"))
 	}
 
 	// Build messages for subagent

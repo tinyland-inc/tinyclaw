@@ -2,6 +2,7 @@ package tools
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"sync"
@@ -61,7 +62,7 @@ func (r *ToolRegistry) ExecuteWithContext(
 			map[string]any{
 				"tool": name,
 			})
-		return ErrorResult(fmt.Sprintf("tool %q not found", name)).WithError(fmt.Errorf("tool not found"))
+		return ErrorResult(fmt.Sprintf("tool %q not found", name)).WithError(errors.New("tool not found"))
 	}
 
 	// If tool implements ContextualTool, set context

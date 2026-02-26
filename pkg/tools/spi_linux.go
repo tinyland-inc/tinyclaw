@@ -65,7 +65,7 @@ func configureSPI(devPath string, mode uint8, bits uint8, speed uint32) (int, *T
 	return fd, nil
 }
 
-// transfer performs a full-duplex SPI transfer
+//nolint:funlen // SPI transfer requires sequential validation + ioctl setup
 func (t *SPITool) transfer(args map[string]any) *ToolResult {
 	confirm, _ := args["confirm"].(bool)
 	if !confirm {
@@ -100,7 +100,7 @@ func (t *SPITool) transfer(args map[string]any) *ToolResult {
 		txBuf[i] = byte(b)
 	}
 
-	devPath := fmt.Sprintf("/dev/spidev%s", dev)
+	devPath := "/dev/spidev" + dev
 	fd, errResult := configureSPI(devPath, mode, bits, speed)
 	if errResult != nil {
 		return errResult
@@ -159,7 +159,7 @@ func (t *SPITool) readDevice(args map[string]any) *ToolResult {
 		return ErrorResult("length is required for read (1-4096)")
 	}
 
-	devPath := fmt.Sprintf("/dev/spidev%s", dev)
+	devPath := "/dev/spidev" + dev
 	fd, errResult := configureSPI(devPath, mode, bits, speed)
 	if errResult != nil {
 		return errResult

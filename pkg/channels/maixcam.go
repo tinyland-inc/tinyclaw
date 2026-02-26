@@ -3,6 +3,7 @@ package channels
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"sync"
@@ -206,7 +207,7 @@ func (c *MaixCamChannel) Stop(ctx context.Context) error {
 
 func (c *MaixCamChannel) Send(ctx context.Context, msg bus.OutboundMessage) error {
 	if !c.IsRunning() {
-		return fmt.Errorf("maixcam channel not running")
+		return errors.New("maixcam channel not running")
 	}
 
 	c.clientsMux.RLock()
@@ -214,7 +215,7 @@ func (c *MaixCamChannel) Send(ctx context.Context, msg bus.OutboundMessage) erro
 
 	if len(c.clients) == 0 {
 		logger.WarnC("maixcam", "No MaixCam devices connected")
-		return fmt.Errorf("no connected MaixCam devices")
+		return errors.New("no connected MaixCam devices")
 	}
 
 	response := map[string]any{

@@ -47,6 +47,7 @@ func (m *USBMonitor) Kind() events.Kind {
 	return events.KindUSB
 }
 
+//nolint:funlen,gocognit // USB hotplug monitoring with udev netlink parsing
 func (m *USBMonitor) Start(ctx context.Context) (<-chan *events.DeviceEvent, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

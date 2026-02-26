@@ -6,6 +6,7 @@ package adapters
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/tinyland-inc/picoclaw/pkg/campaign"
@@ -25,9 +26,9 @@ func NewPicoClawAdapter() *PicoClawAdapter {
 
 func (a *PicoClawAdapter) Execute(ctx context.Context, agentID, prompt string, tools []string) (string, error) {
 	if a.ProcessFn == nil {
-		return "", fmt.Errorf("picoclaw adapter not initialized: ProcessFn is nil")
+		return "", errors.New("picoclaw adapter not initialized: ProcessFn is nil")
 	}
-	sessionKey := fmt.Sprintf("campaign:%s", agentID)
+	sessionKey := "campaign:" + agentID
 	return a.ProcessFn(ctx, prompt, sessionKey)
 }
 
