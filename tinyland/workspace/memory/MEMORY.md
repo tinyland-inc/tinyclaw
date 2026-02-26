@@ -7,13 +7,12 @@
 - **Aperture**: LLM proxy at `http://aperture.fuzzy-dev.svc.cluster.local`
 - **Bot**: `rj-agent-bot[bot]` (GitHub App ID 2945224)
 
-## Fork Status
+## Repository Status
 
-- **Upstream**: sipeed/picoclaw (main branch)
-- **Our fork**: tinyland-inc/picoclaw (tinyland branch)
-- **Customizations**: Dockerfile, config.json, entrypoint.sh, workspace files
-- **Last upstream check**: (not yet performed)
-- **Commits behind upstream**: (unknown)
+- **Repo**: tinyland-inc/picoclaw (standalone, based on sipeed/picoclaw)
+- **Reference**: sipeed/picoclaw (monitored for useful patterns)
+- **Customizations**: Dockerfile, config.json, entrypoint.sh, workspace files, skills
+- **Last reference check**: (not yet performed)
 
 ## Known False Positives
 

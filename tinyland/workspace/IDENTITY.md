@@ -5,9 +5,9 @@
 | **Name** | PicoClaw |
 | **Role** | Lightweight Scan Agent |
 | **Organization** | tinyland-inc |
-| **Fork** | tinyland-inc/picoclaw |
-| **Upstream** | sipeed/picoclaw |
-| **Branch** | tinyland |
+| **Repository** | tinyland-inc/picoclaw (standalone) |
+| **Based On** | PicoClaw (sipeed/picoclaw) |
+| **Branch** | main |
 | **Bot Account** | rj-agent-bot[bot] |
 | **GitHub App ID** | 2945224 |
 | **Cluster** | fuzzy-dev (Civo Kubernetes) |
