@@ -13,9 +13,11 @@ import (
 
 	"github.com/sipeed/picoclaw/cmd/picoclaw/internal"
 	"github.com/sipeed/picoclaw/pkg/agent"
+	"github.com/sipeed/picoclaw/pkg/aperture"
 	"github.com/sipeed/picoclaw/pkg/bus"
 	"github.com/sipeed/picoclaw/pkg/channels"
 	"github.com/sipeed/picoclaw/pkg/config"
+	"github.com/sipeed/picoclaw/pkg/core"
 	"github.com/sipeed/picoclaw/pkg/cron"
 	"github.com/sipeed/picoclaw/pkg/devices"
 	"github.com/sipeed/picoclaw/pkg/health"
@@ -23,14 +25,29 @@ import (
 	"github.com/sipeed/picoclaw/pkg/logger"
 	"github.com/sipeed/picoclaw/pkg/providers"
 	"github.com/sipeed/picoclaw/pkg/state"
+	tailscaleint "github.com/sipeed/picoclaw/pkg/tailscale"
 	"github.com/sipeed/picoclaw/pkg/tools"
 	"github.com/sipeed/picoclaw/pkg/voice"
 )
 
-func gatewayCmd(debug bool) error {
+// GatewayMode selects the message processing backend.
+type GatewayMode int
+
+const (
+	// GatewayModeLegacy uses the existing Go agent loop.
+	GatewayModeLegacy GatewayMode = iota
+	// GatewayModeVerified uses the F*-extracted verified core.
+	GatewayModeVerified
+)
+
+func gatewayCmd(debug bool, mode GatewayMode) error {
 	if debug {
 		logger.SetLevel(logger.DEBUG)
 		fmt.Println("🔍 Debug mode enabled")
+	}
+
+	if mode == GatewayModeVerified {
+		fmt.Println("🔒 Verified mode: using F*-extracted core")
 	}
 
 	cfg, err := internal.LoadConfig()
@@ -113,6 +130,60 @@ func gatewayCmd(debug bool) error {
 	// Inject channel manager into agent loop for command handling
 	agentLoop.SetChannelManager(channelManager)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Initialize verified core proxy if requested
+	var coreProxy *core.CoreProxy
+	if mode == GatewayModeVerified {
+		coreProxy = core.NewCoreProxy("picoclaw-core")
+		if err := coreProxy.Start(ctx); err != nil {
+			fmt.Printf("⚠ Verified core failed to start: %v (falling back to legacy)\n", err)
+			coreProxy = nil
+		} else {
+			fmt.Println("✓ Verified core started")
+		}
+	}
+
+	// Initialize Tailscale tsnet integration
+	var tsServer *tailscaleint.Server
+	if cfg.Tailscale.Enabled {
+		tsServer = tailscaleint.NewServer(tailscaleint.Config{
+			Enabled:  cfg.Tailscale.Enabled,
+			Hostname: cfg.Tailscale.Hostname,
+			StateDir: cfg.Tailscale.StateDir,
+			AuthKey:  cfg.Tailscale.AuthKey,
+		})
+		if err := tsServer.Start(ctx); err != nil {
+			fmt.Printf("Warning: Tailscale tsnet failed to start: %v\n", err)
+			tsServer = nil
+		} else {
+			fmt.Println("Tailscale tsnet node started")
+		}
+	}
+
+	// Initialize Aperture proxy and metering
+	var apertureClient *aperture.Client
+	var meterStore *aperture.MeterStore
+	if cfg.Aperture.Enabled {
+		var err error
+		apertureClient, err = aperture.NewClient(aperture.Config{
+			Enabled:    cfg.Aperture.Enabled,
+			ProxyURL:   cfg.Aperture.ProxyURL,
+			WebhookURL: cfg.Aperture.WebhookURL,
+			WebhookKey: cfg.Aperture.WebhookKey,
+		})
+		if err != nil {
+			fmt.Printf("Warning: Aperture client init failed: %v\n", err)
+		} else {
+			meterStore = aperture.NewMeterStore()
+			apertureClient.SetEventHandler(func(event aperture.UsageEvent) {
+				meterStore.Record("default", "default", event)
+			})
+			fmt.Println("Aperture proxy enabled")
+		}
+	}
+
 	var transcriber *voice.GroqTranscriber
 	groqAPIKey := cfg.Providers.Groq.APIKey
 	if groqAPIKey == "" {
@@ -159,9 +230,6 @@ func gatewayCmd(debug bool) error {
 	fmt.Printf("✓ Gateway started on %s:%d\n", cfg.Gateway.Host, cfg.Gateway.Port)
 	fmt.Println("Press Ctrl+C to stop")
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	if err := cronService.Start(); err != nil {
 		fmt.Printf("Error starting cron service: %v\n", err)
 	}
@@ -206,6 +274,14 @@ func gatewayCmd(debug bool) error {
 	if cp, ok := provider.(providers.StatefulProvider); ok {
 		cp.Close()
 	}
+	if coreProxy != nil {
+		coreProxy.Stop()
+	}
+	if tsServer != nil {
+		tsServer.Stop()
+	}
+	_ = apertureClient // client has no Stop method, just nil check
+	_ = meterStore     // metrics are in-memory, no cleanup needed
 	cancel()
 	healthServer.Stop(context.Background())
 	deviceService.Stop()

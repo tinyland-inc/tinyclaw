@@ -4,6 +4,32 @@ on:
   pull_request: { }
 
 jobs:
+  dhall-check:
+    name: Dhall Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Dhall
+        run: |
+          DHALL_VERSION="1.42.1"
+          DHALL_JSON_VERSION="1.7.12"
+          curl -sSL "https://github.com/dhall-lang/dhall-haskell/releases/download/${DHALL_VERSION}/dhall-${DHALL_VERSION}-x86_64-linux.tar.bz2" | tar xj -C /usr/local
+          curl -sSL "https://github.com/dhall-lang/dhall-haskell/releases/download/${DHALL_VERSION}/dhall-json-${DHALL_JSON_VERSION}-x86_64-linux.tar.bz2" | tar xj -C /usr/local
+
+      - name: Type-check Dhall files
+        run: find dhall -name '*.dhall' -exec dhall type --file {} \; > /dev/null
+
+      - name: Render examples
+        run: |
+          mkdir -p dhall/rendered
+          for example in dhall/examples/*.dhall; do
+            name=$(basename "$example" .dhall)
+            dhall-to-json --file "$example" --output "dhall/rendered/$name.json"
+            echo "Rendered $name.json"
+          done
+
   lint:
     name: Linter
     runs-on: ubuntu-latest
@@ -25,7 +51,7 @@ jobs:
           version: v2.10.1
 
   test:
-    name: Tests
+    name: Go Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -39,5 +65,99 @@ jobs:
       - name: Run go generate
         run: go generate ./...
 
-      - name: Run go test
+      - name: Run unit tests
         run: go test ./...
+
+  e2e:
+    name: E2E Integration Tests
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Install Dhall
+        run: |
+          DHALL_VERSION="1.42.1"
+          DHALL_JSON_VERSION="1.7.12"
+          curl -sSL "https://github.com/dhall-lang/dhall-haskell/releases/download/${DHALL_VERSION}/dhall-${DHALL_VERSION}-x86_64-linux.tar.bz2" | tar xj -C /usr/local
+          curl -sSL "https://github.com/dhall-lang/dhall-haskell/releases/download/${DHALL_VERSION}/dhall-json-${DHALL_JSON_VERSION}-x86_64-linux.tar.bz2" | tar xj -C /usr/local
+
+      - name: Run go generate
+        run: go generate ./...
+
+      - name: Run E2E tests
+        run: go test ./tests/e2e/... -v -count=1
+
+  build:
+    name: Build Binary
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: darwin
+            goarch: arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Run go generate
+        run: go generate ./...
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          go build -v -tags stdjson \
+            -ldflags "-X github.com/sipeed/picoclaw/cmd/picoclaw/internal.version=$(git describe --tags --always --dirty 2>/dev/null || echo dev) -s -w" \
+            -o build/picoclaw-${{ matrix.goos }}-${{ matrix.goarch }} \
+            ./cmd/picoclaw
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: picoclaw-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: build/picoclaw-*
+
+  verified-core:
+    name: Build Verified Core (OCaml)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install OCaml and Dune
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ocaml opam
+          opam init --auto-setup --disable-sandboxing
+          eval $(opam env)
+          opam install dune yojson --yes
+
+      - name: Build verified core
+        run: |
+          eval $(opam env)
+          cd fstar/extracted && dune build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: picoclaw-core
+          path: fstar/extracted/_build/default/bin/main.exe

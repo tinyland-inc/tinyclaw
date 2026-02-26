@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sync/atomic"
 
@@ -57,6 +58,8 @@ type Config struct {
 	Tools     ToolsConfig     `json:"tools"`
 	Heartbeat HeartbeatConfig `json:"heartbeat"`
 	Devices   DevicesConfig   `json:"devices"`
+	Tailscale TailscaleConfig `json:"tailscale,omitempty"`
+	Aperture  ApertureConfig  `json:"aperture,omitempty"`
 }
 
 // MarshalJSON implements custom JSON marshaling for Config
@@ -316,6 +319,23 @@ type DevicesConfig struct {
 	MonitorUSB bool `json:"monitor_usb" env:"PICOCLAW_DEVICES_MONITOR_USB"`
 }
 
+// TailscaleConfig holds Tailscale tsnet integration settings.
+type TailscaleConfig struct {
+	Enabled  bool   `json:"enabled"   env:"PICOCLAW_TAILSCALE_ENABLED"`
+	Hostname string `json:"hostname"  env:"PICOCLAW_TAILSCALE_HOSTNAME"`
+	StateDir string `json:"state_dir" env:"PICOCLAW_TAILSCALE_STATE_DIR"`
+	AuthKey  string `json:"auth_key"  env:"PICOCLAW_TAILSCALE_AUTH_KEY"`
+}
+
+// ApertureConfig holds Tailscale Aperture proxy integration settings.
+type ApertureConfig struct {
+	Enabled    bool   `json:"enabled"     env:"PICOCLAW_APERTURE_ENABLED"`
+	ProxyURL   string `json:"proxy_url"   env:"PICOCLAW_APERTURE_PROXY_URL"`
+	WebhookURL string `json:"webhook_url" env:"PICOCLAW_APERTURE_WEBHOOK_URL"`
+	WebhookKey string `json:"webhook_key" env:"PICOCLAW_APERTURE_WEBHOOK_KEY"`
+	CerbosURL  string `json:"cerbos_url"  env:"PICOCLAW_APERTURE_CERBOS_URL"`
+}
+
 type ProvidersConfig struct {
 	Anthropic     ProviderConfig       `json:"anthropic"`
 	OpenAI        OpenAIProviderConfig `json:"openai"`
@@ -499,6 +519,50 @@ type ClawHubRegistryConfig struct {
 	Timeout         int    `json:"timeout"           env:"PICOCLAW_SKILLS_REGISTRIES_CLAWHUB_TIMEOUT"`
 	MaxZipSize      int    `json:"max_zip_size"      env:"PICOCLAW_SKILLS_REGISTRIES_CLAWHUB_MAX_ZIP_SIZE"`
 	MaxResponseSize int    `json:"max_response_size" env:"PICOCLAW_SKILLS_REGISTRIES_CLAWHUB_MAX_RESPONSE_SIZE"`
+}
+
+// LoadDhallConfig loads configuration from a .dhall file by invoking dhall-to-json
+// and parsing the resulting JSON. Returns nil, nil if dhall-to-json is not available.
+func LoadDhallConfig(path string) (*Config, error) {
+	dhallBin, err := exec.LookPath("dhall-to-json")
+	if err != nil {
+		return nil, nil // dhall-to-json not installed, caller should fall back
+	}
+
+	cmd := exec.Command(dhallBin, "--file", path)
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("dhall-to-json failed for %s: %w", path, err)
+	}
+
+	cfg := DefaultConfig()
+
+	// Same pre-scan logic as LoadConfig to avoid inheriting default model_list
+	var tmp Config
+	if err := json.Unmarshal(out, &tmp); err != nil {
+		return nil, fmt.Errorf("error parsing dhall-to-json output: %w", err)
+	}
+	if len(tmp.ModelList) > 0 {
+		cfg.ModelList = nil
+	}
+
+	if err := json.Unmarshal(out, cfg); err != nil {
+		return nil, fmt.Errorf("error parsing dhall-to-json output: %w", err)
+	}
+
+	if err := env.Parse(cfg); err != nil {
+		return nil, err
+	}
+
+	if len(cfg.ModelList) == 0 && cfg.HasProvidersConfig() {
+		cfg.ModelList = ConvertProvidersToModelList(cfg)
+	}
+
+	if err := cfg.ValidateModelList(); err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
 }
 
 func LoadConfig(path string) (*Config, error) {

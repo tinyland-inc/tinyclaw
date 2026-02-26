@@ -1,6 +1,5 @@
-# Binaries
-# Go build artifacts
-bin/
+# ─── Go ─────────────────────────────────────────────────────────────────────────
+/bin/
 build/
 *.exe
 *.dll
@@ -12,35 +11,69 @@ build/
 /picoclaw-test
 cmd/**/workspace
 
-# Picoclaw specific
+# ─── Dhall ──────────────────────────────────────────────────────────────────────
+dhall/rendered/
+dhall/**/*.json
+.dhall-cache/
 
-# PicoClaw
+# ─── F* ─────────────────────────────────────────────────────────────────────────
+fstar/**/*.checked
+fstar/**/*.krml
+fstar/hints/
+fstar/extracted/_build/
+# Auto-extracted F* modules (case-insensitive: also matches picoclaw_*)
+fstar/extracted/lib/PicoClaw_*.ml
+# Preserve hand-written OCaml files
+!fstar/extracted/lib/picoclaw_core.ml
+!fstar/extracted/lib/json_codec.ml
+!fstar/extracted/lib/futhark_bindings.ml
+
+# ─── Futhark ────────────────────────────────────────────────────────────────────
+futhark/build/
+futhark/**/*.c
+futhark/**/*.h
+futhark/**/*.json
+
+# ─── OCaml ──────────────────────────────────────────────────────────────────────
+_build/
+_opam/
+*.cmi
+*.cmo
+*.cmx
+*.cma
+*.cmxa
+*.byte
+*.native
+
+# ─── Nix ────────────────────────────────────────────────────────────────────────
+result
+result-*
+.direnv/
+
+# ─── PicoClaw ───────────────────────────────────────────────────────────────────
 .picoclaw/
-config.json
+/config.json
 sessions/
-build/
 
-# Coverage
-
-# Secrets & Config (keep templates, ignore actual secrets)
+# ─── Secrets & Config ──────────────────────────────────────────────────────────
 .env
 config/config.json
 
-# Test
+# ─── Testing ────────────────────────────────────────────────────────────────────
 coverage.txt
 coverage.html
 
-# OS
+# ─── OS ─────────────────────────────────────────────────────────────────────────
 .DS_Store
 
-# Ralph workspace
-ralph/
-.ralph/
-tasks/
-
-# Editors
+# ─── Editors ────────────────────────────────────────────────────────────────────
 .vscode/
 .idea/
 
-# Added by goreleaser init:
+# ─── Release ────────────────────────────────────────────────────────────────────
 dist/
+
+# ─── Legacy ─────────────────────────────────────────────────────────────────────
+ralph/
+.ralph/
+tasks/
