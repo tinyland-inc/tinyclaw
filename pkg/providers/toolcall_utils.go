@@ -5,7 +5,10 @@
 
 package providers
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // NormalizeToolCall normalizes a ToolCall to ensure all fields are properly populated.
 // It handles cases where Name/Arguments might be in different locations (top-level vs Function)
@@ -32,7 +35,11 @@ func NormalizeToolCall(tc ToolCall) ToolCall {
 	}
 
 	// Ensure Function is populated with consistent values
-	argsJSON, _ := json.Marshal(normalized.Arguments)
+	argsJSON, err := json.Marshal(normalized.Arguments)
+	if err != nil {
+		// Arguments map contains non-serializable types; use a descriptive placeholder
+		argsJSON = fmt.Appendf(nil, `{"_marshal_error": %q}`, err.Error())
+	}
 	if normalized.Function == nil {
 		normalized.Function = &FunctionCall{
 			Name:      normalized.Name,

@@ -20,6 +20,7 @@ import (
 
 type QQChannel struct {
 	*BaseChannel
+
 	config         config.QQConfig
 	api            openapi.OpenAPI
 	tokenSource    oauth2.TokenSource

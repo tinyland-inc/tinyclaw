@@ -22,6 +22,7 @@ import (
 
 type FeishuChannel struct {
 	*BaseChannel
+
 	config   config.FeishuConfig
 	client   *lark.Client
 	wsClient *larkws.Client
@@ -112,7 +113,7 @@ func (c *FeishuChannel) Send(ctx context.Context, msg bus.OutboundMessage) error
 			Build()).
 		Build()
 
-	resp, err := c.client.Im.V1.Message.Create(ctx, req)
+	resp, err := c.client.Im.Message.Create(ctx, req)
 	if err != nil {
 		return fmt.Errorf("failed to send feishu message: %w", err)
 	}

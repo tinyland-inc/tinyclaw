@@ -42,6 +42,7 @@ type replyTokenEntry struct {
 // and REST API for sending messages.
 type LINEChannel struct {
 	*BaseChannel
+
 	config         config.LINEConfig
 	httpServer     *http.Server
 	botUserID      string   // Bot's user ID

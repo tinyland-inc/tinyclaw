@@ -124,13 +124,17 @@ func (p *ClaudeCliProvider) buildToolsPrompt(tools []ToolDefinition) string {
 		if tool.Type != "function" {
 			continue
 		}
-		sb.WriteString(fmt.Sprintf("#### %s\n", tool.Function.Name))
+		fmt.Fprintf(&sb, "#### %s\n", tool.Function.Name)
 		if tool.Function.Description != "" {
-			sb.WriteString(fmt.Sprintf("Description: %s\n", tool.Function.Description))
+			fmt.Fprintf(&sb, "Description: %s\n", tool.Function.Description)
 		}
 		if len(tool.Function.Parameters) > 0 {
-			paramsJSON, _ := json.Marshal(tool.Function.Parameters)
-			sb.WriteString(fmt.Sprintf("Parameters:\n```json\n%s\n```\n", string(paramsJSON)))
+			paramsJSON, err := json.Marshal(tool.Function.Parameters)
+			if err != nil {
+				fmt.Fprintf(&sb, "Parameters: (marshal error: %v)\n", err)
+			} else {
+				fmt.Fprintf(&sb, "Parameters:\n```json\n%s\n```\n", string(paramsJSON))
+			}
 		}
 		sb.WriteString("\n")
 	}
@@ -189,9 +193,10 @@ func (p *ClaudeCliProvider) stripToolCallsJSON(text string) string {
 func findMatchingBrace(text string, pos int) int {
 	depth := 0
 	for i := pos; i < len(text); i++ {
-		if text[i] == '{' {
+		switch text[i] {
+		case '{':
 			depth++
-		} else if text[i] == '}' {
+		case '}':
 			depth--
 			if depth == 0 {
 				return i + 1

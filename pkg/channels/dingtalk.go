@@ -21,6 +21,7 @@ import (
 // It uses WebSocket for receiving messages via stream mode and API for sending
 type DingTalkChannel struct {
 	*BaseChannel
+
 	config       config.DingTalkConfig
 	clientID     string
 	clientSecret string

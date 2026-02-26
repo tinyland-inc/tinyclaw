@@ -148,7 +148,7 @@ func TestAuditLog_TamperDetection(t *testing.T) {
 
 func TestAuditLog_MonotonicSequence(t *testing.T) {
 	var log []AuditEntry
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		log = appendAuditEntry(log, "event", "agent-1", "s1", fmt.Sprintf("event %d", i))
 	}
 

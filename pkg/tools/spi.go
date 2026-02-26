@@ -115,7 +115,10 @@ func (t *SPITool) list() *ToolResult {
 		}
 	}
 
-	result, _ := json.MarshalIndent(devices, "", "  ")
+	result, err := json.MarshalIndent(devices, "", "  ")
+	if err != nil {
+		return ErrorResult(fmt.Sprintf("failed to marshal device list: %v", err))
+	}
 	return SilentResult(fmt.Sprintf("Found %d SPI device(s):\n%s", len(devices), string(result)))
 }
 

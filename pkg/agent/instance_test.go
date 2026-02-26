@@ -1,18 +1,13 @@
 package agent
 
 import (
-	"os"
 	"testing"
 
 	"github.com/tinyland-inc/picoclaw/pkg/config"
 )
 
 func TestNewAgentInstance_UsesDefaultsTemperatureAndMaxTokens(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "agent-instance-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	cfg := &config.Config{
 		Agents: config.AgentsConfig{
@@ -40,11 +35,7 @@ func TestNewAgentInstance_UsesDefaultsTemperatureAndMaxTokens(t *testing.T) {
 }
 
 func TestNewAgentInstance_DefaultsTemperatureWhenZero(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "agent-instance-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	cfg := &config.Config{
 		Agents: config.AgentsConfig{
@@ -69,11 +60,7 @@ func TestNewAgentInstance_DefaultsTemperatureWhenZero(t *testing.T) {
 }
 
 func TestNewAgentInstance_DefaultsTemperatureWhenUnset(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "agent-instance-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	cfg := &config.Config{
 		Agents: config.AgentsConfig{

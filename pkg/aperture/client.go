@@ -10,6 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"net/http"
 	"net/url"
 	"sync"
@@ -245,9 +246,7 @@ func (s *MeterStore) GetAllMeters() map[string]*AgentMeter {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	result := make(map[string]*AgentMeter, len(s.meters))
-	for k, v := range s.meters {
-		result[k] = v
-	}
+	maps.Copy(result, s.meters)
 	return result
 }
 

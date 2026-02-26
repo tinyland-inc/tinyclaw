@@ -17,6 +17,7 @@ import (
 
 type WhatsAppChannel struct {
 	*BaseChannel
+
 	conn      *websocket.Conn
 	config    config.WhatsAppConfig
 	url       string

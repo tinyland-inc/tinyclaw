@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+	"maps"
 	"net/http"
 	"sync"
 	"time"
@@ -113,7 +115,9 @@ func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 		Uptime: uptime.String(),
 	}
 
-	json.NewEncoder(w).Encode(resp)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		log.Printf("health: failed to encode response: %v", err)
+	}
 }
 
 func (s *Server) readyHandler(w http.ResponseWriter, r *http.Request) {
@@ -122,38 +126,42 @@ func (s *Server) readyHandler(w http.ResponseWriter, r *http.Request) {
 	s.mu.RLock()
 	ready := s.ready
 	checks := make(map[string]Check)
-	for k, v := range s.checks {
-		checks[k] = v
-	}
+	maps.Copy(checks, s.checks)
 	s.mu.RUnlock()
 
 	if !ready {
 		w.WriteHeader(http.StatusServiceUnavailable)
-		json.NewEncoder(w).Encode(StatusResponse{
+		if err := json.NewEncoder(w).Encode(StatusResponse{
 			Status: "not ready",
 			Checks: checks,
-		})
+		}); err != nil {
+			log.Printf("health: failed to encode response: %v", err)
+		}
 		return
 	}
 
 	for _, check := range checks {
 		if check.Status == "fail" {
 			w.WriteHeader(http.StatusServiceUnavailable)
-			json.NewEncoder(w).Encode(StatusResponse{
+			if err := json.NewEncoder(w).Encode(StatusResponse{
 				Status: "not ready",
 				Checks: checks,
-			})
+			}); err != nil {
+				log.Printf("health: failed to encode response: %v", err)
+			}
 			return
 		}
 	}
 
 	w.WriteHeader(http.StatusOK)
 	uptime := time.Since(s.startTime)
-	json.NewEncoder(w).Encode(StatusResponse{
+	if err := json.NewEncoder(w).Encode(StatusResponse{
 		Status: "ready",
 		Uptime: uptime.String(),
 		Checks: checks,
-	})
+	}); err != nil {
+		log.Printf("health: failed to encode response: %v", err)
+	}
 }
 
 func statusString(ok bool) string {

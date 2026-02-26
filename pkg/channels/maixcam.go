@@ -14,6 +14,7 @@ import (
 
 type MaixCamChannel struct {
 	*BaseChannel
+
 	config     config.MaixCamConfig
 	listener   net.Listener
 	clients    map[net.Conn]bool

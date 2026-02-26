@@ -604,7 +604,10 @@ func TestRunDryRun(t *testing.T) {
 			},
 		},
 	}
-	data, _ := json.Marshal(configData)
+	data, err := json.Marshal(configData)
+	if err != nil {
+		t.Fatalf("marshal configData: %v", err)
+	}
 	os.WriteFile(filepath.Join(openclawHome, "openclaw.json"), data, 0o644)
 
 	opts := Options{
@@ -659,7 +662,10 @@ func TestRunFullMigration(t *testing.T) {
 			},
 		},
 	}
-	data, _ := json.Marshal(configData)
+	data, err := json.Marshal(configData)
+	if err != nil {
+		t.Fatalf("marshal configData: %v", err)
+	}
 	os.WriteFile(filepath.Join(openclawHome, "openclaw.json"), data, 0o644)
 
 	opts := Options{
@@ -805,7 +811,10 @@ func TestRunConfigOnly(t *testing.T) {
 			},
 		},
 	}
-	data, _ := json.Marshal(configData)
+	data, err := json.Marshal(configData)
+	if err != nil {
+		t.Fatalf("marshal configData: %v", err)
+	}
 	os.WriteFile(filepath.Join(openclawHome, "openclaw.json"), data, 0o644)
 
 	opts := Options{
@@ -845,7 +854,10 @@ func TestRunWorkspaceOnly(t *testing.T) {
 			},
 		},
 	}
-	data, _ := json.Marshal(configData)
+	data, err := json.Marshal(configData)
+	if err != nil {
+		t.Fatalf("marshal configData: %v", err)
+	}
 	os.WriteFile(filepath.Join(openclawHome, "openclaw.json"), data, 0o644)
 
 	opts := Options{

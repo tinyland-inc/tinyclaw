@@ -12,13 +12,10 @@ import (
 )
 
 // setupWorkspace creates a temporary workspace with standard directories and optional files.
-// Returns the tmpDir path; caller should defer os.RemoveAll(tmpDir).
+// Returns the tmpDir path; cleaned up automatically via t.TempDir().
 func setupWorkspace(t *testing.T, files map[string]string) string {
 	t.Helper()
-	tmpDir, err := os.MkdirTemp("", "picoclaw-test-*")
-	if err != nil {
-		t.Fatal(err)
-	}
+	tmpDir := t.TempDir()
 	os.MkdirAll(filepath.Join(tmpDir, "memory"), 0o755)
 	os.MkdirAll(filepath.Join(tmpDir, "skills"), 0o755)
 	for name, content := range files {
@@ -39,7 +36,6 @@ func TestSingleSystemMessage(t *testing.T) {
 	tmpDir := setupWorkspace(t, map[string]string{
 		"IDENTITY.md": "# Identity\nTest agent.",
 	})
-	defer os.RemoveAll(tmpDir)
 
 	cb := NewContextBuilder(tmpDir)
 
@@ -155,7 +151,6 @@ func TestMtimeAutoInvalidation(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpDir := setupWorkspace(t, map[string]string{tt.file: tt.contentV1})
-			defer os.RemoveAll(tmpDir)
 
 			cb := NewContextBuilder(tmpDir)
 
@@ -191,7 +186,6 @@ func TestMtimeAutoInvalidation(t *testing.T) {
 	// Skills directory mtime change
 	t.Run("skills dir change", func(t *testing.T) {
 		tmpDir := setupWorkspace(t, nil)
-		defer os.RemoveAll(tmpDir)
 
 		cb := NewContextBuilder(tmpDir)
 		_ = cb.BuildSystemPromptWithCache() // populate cache
@@ -218,7 +212,6 @@ func TestExplicitInvalidateCache(t *testing.T) {
 	tmpDir := setupWorkspace(t, map[string]string{
 		"IDENTITY.md": "# Test Identity",
 	})
-	defer os.RemoveAll(tmpDir)
 
 	cb := NewContextBuilder(tmpDir)
 
@@ -246,7 +239,6 @@ func TestCacheStability(t *testing.T) {
 		"IDENTITY.md": "# Identity\nContent",
 		"SOUL.md":     "# Soul\nContent",
 	})
-	defer os.RemoveAll(tmpDir)
 
 	cb := NewContextBuilder(tmpDir)
 
@@ -295,7 +287,6 @@ func TestNewFileCreationInvalidatesCache(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Start with an empty workspace (no bootstrap/memory files)
 			tmpDir := setupWorkspace(t, nil)
-			defer os.RemoveAll(tmpDir)
 
 			cb := NewContextBuilder(tmpDir)
 
@@ -340,7 +331,6 @@ Original content.`
 	tmpDir := setupWorkspace(t, map[string]string{
 		"skills/test-skill/SKILL.md": skillMD,
 	})
-	defer os.RemoveAll(tmpDir)
 
 	cb := NewContextBuilder(tmpDir)
 
@@ -392,7 +382,6 @@ func TestConcurrentBuildSystemPromptWithCache(t *testing.T) {
 		"memory/MEMORY.md":     "# Memory\nUser prefers Go.",
 		"skills/demo/SKILL.md": "---\nname: demo\ndescription: \"demo skill\"\n---\n# Demo",
 	})
-	defer os.RemoveAll(tmpDir)
 
 	cb := NewContextBuilder(tmpDir)
 
@@ -402,11 +391,11 @@ func TestConcurrentBuildSystemPromptWithCache(t *testing.T) {
 	var wg sync.WaitGroup
 	errs := make(chan string, goroutines*iterations)
 
-	for g := 0; g < goroutines; g++ {
+	for g := range goroutines {
 		wg.Add(1)
 		go func(_id int) {
 			defer wg.Done()
-			for i := 0; i < iterations; i++ {
+			for i := range iterations {
 				result := cb.BuildSystemPromptWithCache()
 				if result == "" {
 					errs <- "empty prompt returned"
@@ -455,7 +444,6 @@ func TestConcurrentBuildSystemPromptWithCache(t *testing.T) {
 func TestEmptyWorkspaceBaselineDetectsNewFiles(t *testing.T) {
 	// Empty workspace: no bootstrap files, no memory, no skills content.
 	tmpDir := setupWorkspace(t, nil)
-	defer os.RemoveAll(tmpDir)
 
 	cb := NewContextBuilder(tmpDir)
 
@@ -489,8 +477,7 @@ func TestEmptyWorkspaceBaselineDetectsNewFiles(t *testing.T) {
 
 // BenchmarkBuildMessagesWithCache measures caching performance.
 func BenchmarkBuildMessagesWithCache(b *testing.B) {
-	tmpDir, _ := os.MkdirTemp("", "picoclaw-bench-*")
-	defer os.RemoveAll(tmpDir)
+	tmpDir := b.TempDir()
 
 	os.MkdirAll(filepath.Join(tmpDir, "memory"), 0o755)
 	os.MkdirAll(filepath.Join(tmpDir, "skills"), 0o755)

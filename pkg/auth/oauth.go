@@ -232,9 +232,12 @@ func parseFlexibleInt(raw json.RawMessage) (int, error) {
 }
 
 func LoginDeviceCode(cfg OAuthProviderConfig) (*AuthCredential, error) {
-	reqBody, _ := json.Marshal(map[string]string{
+	reqBody, err := json.Marshal(map[string]string{
 		"client_id": cfg.ClientID,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("marshal device code request: %w", err)
+	}
 
 	resp, err := http.Post(
 		cfg.Issuer+"/api/accounts/deviceauth/usercode",
@@ -287,10 +290,13 @@ func LoginDeviceCode(cfg OAuthProviderConfig) (*AuthCredential, error) {
 }
 
 func pollDeviceCode(cfg OAuthProviderConfig, deviceAuthID, userCode string) (*AuthCredential, error) {
-	reqBody, _ := json.Marshal(map[string]string{
+	reqBody, err := json.Marshal(map[string]string{
 		"device_auth_id": deviceAuthID,
 		"user_code":      userCode,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("marshal poll device code request: %w", err)
+	}
 
 	resp, err := http.Post(
 		cfg.Issuer+"/api/accounts/deviceauth/token",

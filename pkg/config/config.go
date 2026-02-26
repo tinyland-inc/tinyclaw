@@ -55,16 +55,16 @@ func (f *FlexibleStringSlice) UnmarshalJSON(data []byte) error {
 type Config struct {
 	Agents    AgentsConfig    `json:"agents"`
 	Bindings  []AgentBinding  `json:"bindings,omitempty"`
-	Session   SessionConfig   `json:"session,omitempty"`
+	Session   SessionConfig   `json:"session,omitzero"`
 	Channels  ChannelsConfig  `json:"channels"`
-	Providers ProvidersConfig `json:"providers,omitempty"`
+	Providers ProvidersConfig `json:"providers,omitzero"`
 	ModelList []ModelConfig   `json:"model_list"` // New model-centric provider configuration
 	Gateway   GatewayConfig   `json:"gateway"`
 	Tools     ToolsConfig     `json:"tools"`
 	Heartbeat HeartbeatConfig `json:"heartbeat"`
 	Devices   DevicesConfig   `json:"devices"`
-	Tailscale TailscaleConfig `json:"tailscale,omitempty"`
-	Aperture  ApertureConfig  `json:"aperture,omitempty"`
+	Tailscale TailscaleConfig `json:"tailscale,omitzero"`
+	Aperture  ApertureConfig  `json:"aperture,omitzero"`
 }
 
 // MarshalJSON implements custom JSON marshaling for Config
@@ -72,9 +72,10 @@ type Config struct {
 func (c Config) MarshalJSON() ([]byte, error) {
 	type Alias Config
 	aux := &struct {
+		*Alias
+
 		Providers *ProvidersConfig `json:"providers,omitempty"`
 		Session   *SessionConfig   `json:"session,omitempty"`
-		*Alias
 	}{
 		Alias: (*Alias)(&c),
 	}
@@ -133,7 +134,7 @@ func (m AgentModelConfig) MarshalJSON() ([]byte, error) {
 		Primary   string   `json:"primary,omitempty"`
 		Fallbacks []string `json:"fallbacks,omitempty"`
 	}
-	return json.Marshal(raw{Primary: m.Primary, Fallbacks: m.Fallbacks})
+	return json.Marshal(raw(m))
 }
 
 type AgentConfig struct {
@@ -405,6 +406,7 @@ type ProviderConfig struct {
 
 type OpenAIProviderConfig struct {
 	ProviderConfig
+
 	WebSearch bool `json:"web_search" env:"PICOCLAW_PROVIDERS_OPENAI_WEB_SEARCH"`
 }
 

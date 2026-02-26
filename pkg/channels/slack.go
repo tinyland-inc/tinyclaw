@@ -21,6 +21,7 @@ import (
 
 type SlackChannel struct {
 	*BaseChannel
+
 	config       config.SlackConfig
 	api          *slack.Client
 	socketClient *socketmode.Client

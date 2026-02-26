@@ -113,7 +113,10 @@ func (t *I2CTool) detect() *ToolResult {
 		}
 	}
 
-	result, _ := json.MarshalIndent(buses, "", "  ")
+	result, err := json.MarshalIndent(buses, "", "  ")
+	if err != nil {
+		return ErrorResult(fmt.Sprintf("failed to marshal bus list: %v", err))
+	}
 	return SilentResult(fmt.Sprintf("Found %d I2C bus(es):\n%s", len(buses), string(result)))
 }
 

@@ -92,17 +92,20 @@ func (p *AntigravityProvider) Chat(
 	// Build API URL — uses Cloud Code Assist v1internal streaming endpoint
 	apiURL := fmt.Sprintf("%s/v1internal:streamGenerateContent?alt=sse", antigravityBaseURL)
 
-	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewReader(bodyBytes))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, bytes.NewReader(bodyBytes))
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
 
 	// Headers matching the pi-ai SDK antigravity format
-	clientMetadata, _ := json.Marshal(map[string]string{
+	clientMetadata, err := json.Marshal(map[string]string{
 		"ideType":    "IDE_UNSPECIFIED",
 		"platform":   "PLATFORM_UNSPECIFIED",
 		"pluginType": "GEMINI",
 	})
+	if err != nil {
+		return nil, fmt.Errorf("marshal client metadata: %w", err)
+	}
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "text/event-stream")
@@ -405,7 +408,6 @@ type antigravityJSONResponse struct {
 	} `json:"usageMetadata"`
 }
 
-//nolint:unparam // error return kept for interface consistency
 func (p *AntigravityProvider) parseSSEResponse(body string) (*LLMResponse, error) {
 	var contentParts []string
 	var toolCalls []ToolCall
@@ -438,7 +440,10 @@ func (p *AntigravityProvider) parseSSEResponse(body string) (*LLMResponse, error
 					contentParts = append(contentParts, part.Text)
 				}
 				if part.FunctionCall != nil {
-					argumentsJSON, _ := json.Marshal(part.FunctionCall.Args)
+					argumentsJSON, err := json.Marshal(part.FunctionCall.Args)
+					if err != nil {
+						return nil, fmt.Errorf("marshal function call args: %w", err)
+					}
 					toolCalls = append(toolCalls, ToolCall{
 						ID:        fmt.Sprintf("call_%s_%d", part.FunctionCall.Name, time.Now().UnixNano()),
 						Name:      part.FunctionCall.Name,
@@ -618,15 +623,22 @@ func createAntigravityTokenSource() func() (string, string, error) {
 
 // FetchAntigravityProjectID retrieves the Google Cloud project ID from the loadCodeAssist endpoint.
 func FetchAntigravityProjectID(accessToken string) (string, error) {
-	reqBody, _ := json.Marshal(map[string]any{
+	reqBody, err := json.Marshal(map[string]any{
 		"metadata": map[string]any{
 			"ideType":    "IDE_UNSPECIFIED",
 			"platform":   "PLATFORM_UNSPECIFIED",
 			"pluginType": "GEMINI",
 		},
 	})
+	if err != nil {
+		return "", fmt.Errorf("marshal loadCodeAssist request: %w", err)
+	}
 
-	req, err := http.NewRequest("POST", antigravityBaseURL+"/v1internal:loadCodeAssist", bytes.NewReader(reqBody))
+	req, err := http.NewRequest(
+		http.MethodPost,
+		antigravityBaseURL+"/v1internal:loadCodeAssist",
+		bytes.NewReader(reqBody),
+	)
 	if err != nil {
 		return "", err
 	}
@@ -663,11 +675,18 @@ func FetchAntigravityProjectID(accessToken string) (string, error) {
 
 // FetchAntigravityModels fetches available models from the Cloud Code Assist API.
 func FetchAntigravityModels(accessToken, projectID string) ([]AntigravityModelInfo, error) {
-	reqBody, _ := json.Marshal(map[string]any{
+	reqBody, err := json.Marshal(map[string]any{
 		"project": projectID,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("marshal fetchAvailableModels request: %w", err)
+	}
 
-	req, err := http.NewRequest("POST", antigravityBaseURL+"/v1internal:fetchAvailableModels", bytes.NewReader(reqBody))
+	req, err := http.NewRequest(
+		http.MethodPost,
+		antigravityBaseURL+"/v1internal:fetchAvailableModels",
+		bytes.NewReader(reqBody),
+	)
 	if err != nil {
 		return nil, err
 	}

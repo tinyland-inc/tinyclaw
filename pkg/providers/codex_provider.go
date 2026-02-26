@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/openai/openai-go/v3"
@@ -128,7 +129,7 @@ func (p *CodexProvider) Chat(
 			fields["api_code"] = apiErr.Code
 			fields["api_param"] = apiErr.Param
 			fields["api_message"] = apiErr.Message
-			if apiErr.StatusCode == 400 {
+			if apiErr.StatusCode == http.StatusBadRequest {
 				fields["hint"] = "verify account id header and model compatibility for codex backend"
 			}
 			if apiErr.Response != nil {
@@ -163,8 +164,8 @@ func resolveCodexModel(model string) (string, string) {
 		return codexDefaultModel, "empty model"
 	}
 
-	if strings.HasPrefix(m, "openai/") {
-		m = strings.TrimPrefix(m, "openai/")
+	if after, ok := strings.CutPrefix(m, "openai/"); ok {
+		m = after
 	} else if strings.Contains(m, "/") {
 		return codexDefaultModel, "non-openai model namespace"
 	}

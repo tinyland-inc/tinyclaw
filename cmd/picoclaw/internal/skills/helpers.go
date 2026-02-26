@@ -69,7 +69,7 @@ func skillsInstallFromRegistry(cfg *config.Config, registryName, slug string) er
 
 	registry := registryMgr.GetRegistry(registryName)
 	if registry == nil {
-		return fmt.Errorf("✗  registry '%s' not found or not enabled. check your config.json.", registryName)
+		return fmt.Errorf("✗  registry '%s' not found or not enabled. check your config.json", registryName)
 	}
 
 	workspace := cfg.WorkspacePath()
@@ -101,7 +101,7 @@ func skillsInstallFromRegistry(cfg *config.Config, registryName, slug string) er
 			fmt.Printf("\u2717 Failed to remove partial install: %v\n", rmErr)
 		}
 
-		return fmt.Errorf("\u2717 Skill '%s' is flagged as malicious and cannot be installed.\n", slug)
+		return fmt.Errorf("\u2717 Skill '%s' is flagged as malicious and cannot be installed", slug)
 	}
 
 	if result.IsSuspicious {

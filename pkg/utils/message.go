@@ -13,13 +13,8 @@ func SplitMessage(content string, maxLen int) []string {
 	var messages []string
 
 	// Dynamic buffer: 10% of maxLen, but at least 50 chars if possible
-	codeBlockBuffer := maxLen / 10
-	if codeBlockBuffer < 50 {
-		codeBlockBuffer = 50
-	}
-	if codeBlockBuffer > maxLen/2 {
-		codeBlockBuffer = maxLen / 2
-	}
+	codeBlockBuffer := max(maxLen/10, 50)
+	codeBlockBuffer = min(codeBlockBuffer, maxLen/2)
 
 	for len(content) > 0 {
 		if len(content) <= maxLen {
@@ -28,10 +23,7 @@ func SplitMessage(content string, maxLen int) []string {
 		}
 
 		// Effective split point: maxLen minus buffer, to leave room for code blocks
-		effectiveLimit := maxLen - codeBlockBuffer
-		if effectiveLimit < maxLen/2 {
-			effectiveLimit = maxLen / 2
-		}
+		effectiveLimit := max(maxLen-codeBlockBuffer, maxLen/2)
 
 		// Find natural split point within the effective limit
 		msgEnd := findLastNewline(content[:effectiveLimit], 200)
@@ -151,10 +143,7 @@ func findNextClosingCodeBlock(text string, startIdx int) int {
 // findLastNewline finds the last newline character within the last N characters
 // Returns the position of the newline or -1 if not found
 func findLastNewline(s string, searchWindow int) int {
-	searchStart := len(s) - searchWindow
-	if searchStart < 0 {
-		searchStart = 0
-	}
+	searchStart := max(len(s)-searchWindow, 0)
 	for i := len(s) - 1; i >= searchStart; i-- {
 		if s[i] == '\n' {
 			return i
@@ -166,10 +155,7 @@ func findLastNewline(s string, searchWindow int) int {
 // findLastSpace finds the last space character within the last N characters
 // Returns the position of the space or -1 if not found
 func findLastSpace(s string, searchWindow int) int {
-	searchStart := len(s) - searchWindow
-	if searchStart < 0 {
-		searchStart = 0
-	}
+	searchStart := max(len(s)-searchWindow, 0)
 	for i := len(s) - 1; i >= searchStart; i-- {
 		if s[i] == ' ' || s[i] == '\t' {
 			return i

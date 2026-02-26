@@ -1,6 +1,9 @@
 package routing
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestNormalizeAgentID_Empty(t *testing.T) {
 	if got := NormalizeAgentID(""); got != DefaultAgentID {
@@ -57,10 +60,11 @@ func TestNormalizeAgentID_AllInvalid(t *testing.T) {
 }
 
 func TestNormalizeAgentID_TruncatesAt64(t *testing.T) {
-	long := ""
-	for i := 0; i < 100; i++ {
-		long += "a"
+	var sb strings.Builder
+	for range 100 {
+		sb.WriteByte('a')
 	}
+	long := sb.String()
 	got := NormalizeAgentID(long)
 	if len(got) > MaxAgentIDLength {
 		t.Errorf("length = %d, want <= %d", len(got), MaxAgentIDLength)

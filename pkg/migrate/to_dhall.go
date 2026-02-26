@@ -106,21 +106,21 @@ func configToDhall(cfg *config.Config, result *ToDhallResult) string {
 func renderConfig(b *strings.Builder, cfg *config.Config, indent string) {
 	b.WriteString("{ agents =\n")
 	renderAgents(b, &cfg.Agents, indent)
-	b.WriteString(fmt.Sprintf("%s, bindings = %s\n", indent, renderBindings(cfg.Bindings)))
-	b.WriteString(fmt.Sprintf("%s, session =\n", indent))
+	fmt.Fprintf(b, "%s, bindings = %s\n", indent, renderBindings(cfg.Bindings))
+	fmt.Fprintf(b, "%s, session =\n", indent)
 	renderSession(b, &cfg.Session, indent+"  ")
-	b.WriteString(fmt.Sprintf("%s, channels =\n", indent))
+	fmt.Fprintf(b, "%s, channels =\n", indent)
 	renderChannels(b, &cfg.Channels, indent+"  ")
-	b.WriteString(fmt.Sprintf("%s, model_list =\n", indent))
+	fmt.Fprintf(b, "%s, model_list =\n", indent)
 	renderModelList(b, cfg.ModelList, indent+"    ")
-	b.WriteString(fmt.Sprintf("%s, gateway = { host = %s, port = %d }\n", indent,
-		dhallText(cfg.Gateway.Host), cfg.Gateway.Port))
-	b.WriteString(fmt.Sprintf("%s, tools =\n", indent))
+	fmt.Fprintf(b, "%s, gateway = { host = %s, port = %d }\n", indent,
+		dhallText(cfg.Gateway.Host), cfg.Gateway.Port)
+	fmt.Fprintf(b, "%s, tools =\n", indent)
 	renderTools(b, &cfg.Tools, indent+"  ")
-	b.WriteString(fmt.Sprintf("%s, heartbeat = { enabled = %s, interval = %d }\n", indent,
-		dhallBool(cfg.Heartbeat.Enabled), cfg.Heartbeat.Interval))
-	b.WriteString(fmt.Sprintf("%s, devices = { enabled = %s, monitor_usb = %s }\n", indent,
-		dhallBool(cfg.Devices.Enabled), dhallBool(cfg.Devices.MonitorUSB)))
+	fmt.Fprintf(b, "%s, heartbeat = { enabled = %s, interval = %d }\n", indent,
+		dhallBool(cfg.Heartbeat.Enabled), cfg.Heartbeat.Interval)
+	fmt.Fprintf(b, "%s, devices = { enabled = %s, monitor_usb = %s }\n", indent,
+		dhallBool(cfg.Devices.Enabled), dhallBool(cfg.Devices.MonitorUSB))
 	b.WriteString(indent + "}\n")
 }
 
@@ -181,7 +181,10 @@ func renderBindings(bindings []config.AgentBinding) string {
 	}
 	parts := []string{}
 	for _, bind := range bindings {
-		bindJSON, _ := json.Marshal(bind)
+		bindJSON, err := json.Marshal(bind)
+		if err != nil {
+			return fmt.Sprintf("-- TODO: convert binding (marshal error: %v)", err)
+		}
 		parts = append(parts, fmt.Sprintf("-- TODO: convert binding: %s", string(bindJSON)))
 	}
 	return "[\n" + strings.Join(parts, "\n") + "\n    ]"
@@ -197,7 +200,7 @@ func renderSession(b *strings.Builder, s *config.SessionConfig, indent string) {
 			if !first {
 				b.WriteString(indent + "  , ")
 			}
-			b.WriteString(fmt.Sprintf("{ mapKey = %s, mapValue = %s }", dhallText(k), dhallTextList(v)))
+			fmt.Fprintf(b, "{ mapKey = %s, mapValue = %s }", dhallText(k), dhallTextList(v))
 			first = false
 		}
 		b.WriteString("\n" + indent + "  ]\n")
@@ -358,12 +361,12 @@ func renderModelConfig(b *strings.Builder, mc *config.ModelConfig, indent string
 		b.WriteString(indent + "}")
 	case mc.APIKey != "":
 		// Use mkModelConfig helper with env var
-		b.WriteString(fmt.Sprintf("H.mkModelConfig %s %s %s (%s)",
-			dhallText(mc.ModelName), dhallText(mc.Model), apiBase, redactedKey))
+		fmt.Fprintf(b, "H.mkModelConfig %s %s %s (%s)",
+			dhallText(mc.ModelName), dhallText(mc.Model), apiBase, redactedKey)
 	default:
 		// Use emptyModelConfig helper
-		b.WriteString(fmt.Sprintf("H.emptyModelConfig %s %s %s",
-			dhallText(mc.ModelName), dhallText(mc.Model), apiBase))
+		fmt.Fprintf(b, "H.emptyModelConfig %s %s %s",
+			dhallText(mc.ModelName), dhallText(mc.Model), apiBase)
 	}
 }
 

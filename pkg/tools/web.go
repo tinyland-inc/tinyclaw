@@ -71,7 +71,7 @@ func (p *BraveSearchProvider) Search(ctx context.Context, query string, count in
 	searchURL := fmt.Sprintf("https://api.search.brave.com/res/v1/web/search?q=%s&count=%d",
 		url.QueryEscape(query), count)
 
-	req, err := http.NewRequestWithContext(ctx, "GET", searchURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, searchURL, nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
@@ -157,7 +157,7 @@ func (p *TavilySearchProvider) Search(ctx context.Context, query string, count i
 		return "", fmt.Errorf("failed to marshal payload: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", searchURL, bytes.NewBuffer(bodyBytes))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, searchURL, bytes.NewBuffer(bodyBytes))
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
@@ -223,7 +223,7 @@ type DuckDuckGoSearchProvider struct {
 func (p *DuckDuckGoSearchProvider) Search(ctx context.Context, query string, count int) (string, error) {
 	searchURL := fmt.Sprintf("https://html.duckduckgo.com/html/?q=%s", url.QueryEscape(query))
 
-	req, err := http.NewRequestWithContext(ctx, "GET", searchURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, searchURL, nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
@@ -279,7 +279,7 @@ func (p *DuckDuckGoSearchProvider) extractResults(html string, count int, query 
 
 	maxItems := min(len(matches), count)
 
-	for i := 0; i < maxItems; i++ {
+	for i := range maxItems {
 		urlStr := matches[i][1]
 		title := stripTags(matches[i][2])
 		title = strings.TrimSpace(title)
@@ -287,9 +287,8 @@ func (p *DuckDuckGoSearchProvider) extractResults(html string, count int, query 
 		// URL decoding if needed
 		if strings.Contains(urlStr, "uddg=") {
 			if u, err := url.QueryUnescape(urlStr); err == nil {
-				idx := strings.Index(u, "uddg=")
-				if idx != -1 {
-					urlStr = u[idx+5:]
+				if _, after, ok := strings.Cut(u, "uddg="); ok {
+					urlStr = after
 				}
 			}
 		}
@@ -342,7 +341,7 @@ func (p *PerplexitySearchProvider) Search(ctx context.Context, query string, cou
 		return "", fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", searchURL, strings.NewReader(string(payloadBytes)))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, searchURL, strings.NewReader(string(payloadBytes)))
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)
 	}
@@ -367,7 +366,7 @@ func (p *PerplexitySearchProvider) Search(ctx context.Context, query string, cou
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Perplexity API error: %s", string(body))
+		return "", fmt.Errorf("perplexity API error: %s", string(body))
 	}
 
 	var searchResp struct {
@@ -577,7 +576,7 @@ func (t *WebFetchTool) Execute(ctx context.Context, args map[string]any) *ToolRe
 		}
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "GET", urlStr, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlStr, nil)
 	if err != nil {
 		return ErrorResult(fmt.Sprintf("failed to create request: %v", err))
 	}
@@ -615,10 +614,15 @@ func (t *WebFetchTool) Execute(ctx context.Context, args map[string]any) *ToolRe
 	switch {
 	case strings.Contains(contentType, "application/json"):
 		var jsonData any
-		if err := json.Unmarshal(body, &jsonData); err == nil {
-			formatted, _ := json.MarshalIndent(jsonData, "", "  ")
-			text = string(formatted)
-			extractor = "json"
+		if unmarshalErr := json.Unmarshal(body, &jsonData); unmarshalErr == nil {
+			formatted, merr := json.MarshalIndent(jsonData, "", "  ")
+			if merr != nil {
+				text = string(body)
+				extractor = "raw"
+			} else {
+				text = string(formatted)
+				extractor = "json"
+			}
 		} else {
 			text = string(body)
 			extractor = "raw"
@@ -646,7 +650,10 @@ func (t *WebFetchTool) Execute(ctx context.Context, args map[string]any) *ToolRe
 		"text":      text,
 	}
 
-	resultJSON, _ := json.MarshalIndent(result, "", "  ")
+	resultJSON, err := json.MarshalIndent(result, "", "  ")
+	if err != nil {
+		return ErrorResult(fmt.Sprintf("failed to marshal fetch result: %v", err))
+	}
 
 	return &ToolResult{
 		ForLLM: fmt.Sprintf(

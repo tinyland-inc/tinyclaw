@@ -229,7 +229,7 @@ func TestRunner_ListExecutions(t *testing.T) {
 	adapter := &testAdapter{name: "picoclaw"}
 	runner.RegisterAdapter("picoclaw", adapter)
 
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		def := &Definition{
 			ID:   fmt.Sprintf("list-%d", i),
 			Name: fmt.Sprintf("Campaign %d", i),

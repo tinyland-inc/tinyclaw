@@ -46,7 +46,10 @@ func TestWebTool_WebFetch_Success(t *testing.T) {
 // TestWebTool_WebFetch_JSON verifies JSON content handling
 func TestWebTool_WebFetch_JSON(t *testing.T) {
 	testData := map[string]string{"key": "value", "number": "123"}
-	expectedJSON, _ := json.MarshalIndent(testData, "", "  ")
+	expectedJSON, err := json.MarshalIndent(testData, "", "  ")
+	if err != nil {
+		t.Fatalf("marshal testData: %v", err)
+	}
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -357,7 +360,7 @@ func TestCreateHTTPClient_ProxyConfigured(t *testing.T) {
 		t.Fatal("transport.Proxy is nil, want non-nil")
 	}
 
-	req, err := http.NewRequest("GET", "https://example.com", nil)
+	req, err := http.NewRequest(http.MethodGet, "https://example.com", nil)
 	if err != nil {
 		t.Fatalf("http.NewRequest() error: %v", err)
 	}
@@ -387,7 +390,7 @@ func TestCreateHTTPClient_Socks5ProxyConfigured(t *testing.T) {
 	if !ok {
 		t.Fatalf("client.Transport type = %T, want *http.Transport", client.Transport)
 	}
-	req, err := http.NewRequest("GET", "https://example.com", nil)
+	req, err := http.NewRequest(http.MethodGet, "https://example.com", nil)
 	if err != nil {
 		t.Fatalf("http.NewRequest() error: %v", err)
 	}
@@ -433,7 +436,7 @@ func TestCreateHTTPClient_ProxyFromEnvironmentWhenConfigEmpty(t *testing.T) {
 		t.Fatal("transport.Proxy is nil, want proxy function from environment")
 	}
 
-	req, err := http.NewRequest("GET", "https://example.com", nil)
+	req, err := http.NewRequest(http.MethodGet, "https://example.com", nil)
 	if err != nil {
 		t.Fatalf("http.NewRequest() error: %v", err)
 	}
@@ -509,7 +512,7 @@ func TestNewWebSearchTool_PropagatesProxy(t *testing.T) {
 // TestWebTool_TavilySearch_Success verifies successful Tavily search
 func TestWebTool_TavilySearch_Success(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "POST" {
+		if r.Method != http.MethodPost {
 			t.Errorf("Expected POST request, got %s", r.Method)
 		}
 		if r.Header.Get("Content-Type") != "application/json" {

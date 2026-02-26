@@ -56,7 +56,10 @@ func TestParseJSONLEvents_ToolCallExtraction(t *testing.T) {
 		Type: "item.completed",
 		Item: &codexEventItem{ID: "item_1", Type: "agent_message", Text: toolCallText},
 	}
-	itemJSON, _ := json.Marshal(item)
+	itemJSON, err := json.Marshal(item)
+	if err != nil {
+		t.Fatalf("marshal item: %v", err)
+	}
 	usageEvt := `{"type":"turn.completed","usage":{"input_tokens":50,"cached_input_tokens":0,"output_tokens":20}}`
 	events := `{"type":"turn.started"}` + "\n" + string(itemJSON) + "\n" + usageEvt
 
@@ -92,7 +95,10 @@ func TestParseJSONLEvents_MultipleToolCalls(t *testing.T) {
 		Type: "item.completed",
 		Item: &codexEventItem{ID: "item_1", Type: "agent_message", Text: toolCallText},
 	}
-	itemJSON, _ := json.Marshal(item)
+	itemJSON, err := json.Marshal(item)
+	if err != nil {
+		t.Fatalf("marshal item: %v", err)
+	}
 	events := `{"type":"turn.started"}` + "\n" + string(itemJSON) + "\n" + `{"type":"turn.completed"}`
 
 	resp, err := p.parseJSONLEvents(events)
@@ -406,7 +412,7 @@ func createMockCodexCLI(t *testing.T, events []string) string {
 	var sb strings.Builder
 	sb.WriteString("#!/bin/bash\n")
 	for _, event := range events {
-		sb.WriteString(fmt.Sprintf("echo '%s'\n", event))
+		fmt.Fprintf(&sb, "echo '%s'\n", event)
 	}
 
 	if err := os.WriteFile(scriptPath, []byte(sb.String()), 0o755); err != nil {

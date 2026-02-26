@@ -27,6 +27,7 @@ func (m *mockRegistryTool) Execute(_ context.Context, _ map[string]any) *ToolRes
 
 type mockCtxTool struct {
 	mockRegistryTool
+
 	channel string
 	chatID  string
 }
@@ -38,6 +39,7 @@ func (m *mockCtxTool) SetContext(channel, chatID string) {
 
 type mockAsyncRegistryTool struct {
 	mockRegistryTool
+
 	cb AsyncCallback
 }
 
@@ -329,7 +331,7 @@ func TestToolRegistry_ConcurrentAccess(t *testing.T) {
 	r := NewToolRegistry()
 	var wg sync.WaitGroup
 
-	for i := 0; i < 50; i++ {
+	for i := range 50 {
 		wg.Add(1)
 		go func(n int) {
 			defer wg.Done()

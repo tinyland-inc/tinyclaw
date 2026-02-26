@@ -233,14 +233,14 @@ func translateTools(tools []ToolDefinition) []anthropic.ToolUnionParam {
 }
 
 func parseResponse(resp *anthropic.Message) *LLMResponse {
-	var content string
+	var sb strings.Builder
 	var toolCalls []ToolCall
 
 	for _, block := range resp.Content {
 		switch block.Type {
 		case "text":
 			tb := block.AsText()
-			content += tb.Text
+			sb.WriteString(tb.Text)
 		case "tool_use":
 			tu := block.AsToolUse()
 			var args map[string]any
@@ -270,7 +270,7 @@ func parseResponse(resp *anthropic.Message) *LLMResponse {
 	}
 
 	return &LLMResponse{
-		Content:      content,
+		Content:      sb.String(),
 		ToolCalls:    toolCalls,
 		FinishReason: finishReason,
 		Usage: &UsageInfo{
@@ -288,8 +288,8 @@ func normalizeBaseURL(apiBase string) string {
 	}
 
 	base = strings.TrimRight(base, "/")
-	if strings.HasSuffix(base, "/v1") {
-		base = strings.TrimSuffix(base, "/v1")
+	if b, ok := strings.CutSuffix(base, "/v1"); ok {
+		base = b
 	}
 	if base == "" {
 		return defaultBaseURL

@@ -29,9 +29,7 @@ linters:
 
     # Disabled: need codebase-wide fixes before enabling
     - contextcheck
-    - embeddedstructfieldcheck
     - errcheck
-    - errchkjson
     - forbidigo
     - funlen
     - gocognit
@@ -41,16 +39,12 @@ linters:
     - lll
     - maintidx
     - mnd
-    - modernize
     - nestif
     - paralleltest
     - perfsprint
     - revive
-    - staticcheck
     - tagalign
     - testifylint
-    - usestdlibvars
-    - usetesting
   settings:
     errcheck:
       check-type-assertions: true

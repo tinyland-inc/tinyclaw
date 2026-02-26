@@ -10,11 +10,7 @@ import (
 )
 
 func TestExecuteHeartbeat_Async(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "heartbeat-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	hs := NewHeartbeatService(tmpDir, 30, true)
 	hs.stopChan = make(chan struct{}) // Enable for testing
@@ -48,11 +44,7 @@ func TestExecuteHeartbeat_Async(t *testing.T) {
 }
 
 func TestExecuteHeartbeat_Error(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "heartbeat-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	hs := NewHeartbeatService(tmpDir, 30, true)
 	hs.stopChan = make(chan struct{}) // Enable for testing
@@ -86,11 +78,7 @@ func TestExecuteHeartbeat_Error(t *testing.T) {
 }
 
 func TestExecuteHeartbeat_Silent(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "heartbeat-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	hs := NewHeartbeatService(tmpDir, 30, true)
 	hs.stopChan = make(chan struct{}) // Enable for testing
@@ -124,16 +112,11 @@ func TestExecuteHeartbeat_Silent(t *testing.T) {
 }
 
 func TestHeartbeatService_StartStop(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "heartbeat-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	hs := NewHeartbeatService(tmpDir, 1, true)
 
-	err = hs.Start()
-	if err != nil {
+	if err := hs.Start(); err != nil {
 		t.Fatalf("Failed to start heartbeat service: %v", err)
 	}
 
@@ -143,11 +126,7 @@ func TestHeartbeatService_StartStop(t *testing.T) {
 }
 
 func TestHeartbeatService_Disabled(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "heartbeat-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	hs := NewHeartbeatService(tmpDir, 1, false)
 
@@ -155,16 +134,11 @@ func TestHeartbeatService_Disabled(t *testing.T) {
 		t.Error("Expected service to be disabled")
 	}
 
-	err = hs.Start()
-	_ = err // Disabled service returns nil
+	_ = hs.Start() // Disabled service returns nil
 }
 
 func TestExecuteHeartbeat_NilResult(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "heartbeat-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	hs := NewHeartbeatService(tmpDir, 30, true)
 	hs.stopChan = make(chan struct{}) // Enable for testing
@@ -182,11 +156,7 @@ func TestExecuteHeartbeat_NilResult(t *testing.T) {
 
 // TestLogPath verifies heartbeat log is written to workspace directory
 func TestLogPath(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "heartbeat-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	hs := NewHeartbeatService(tmpDir, 30, true)
 
@@ -202,11 +172,7 @@ func TestLogPath(t *testing.T) {
 
 // TestHeartbeatFilePath verifies HEARTBEAT.md is at workspace root
 func TestHeartbeatFilePath(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "heartbeat-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	hs := NewHeartbeatService(tmpDir, 30, true)
 

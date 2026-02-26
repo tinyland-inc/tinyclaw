@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/mymmrac/telego"
-	"github.com/mymmrac/telego/telegohandler"
 	th "github.com/mymmrac/telego/telegohandler"
 	tu "github.com/mymmrac/telego/telegoutil"
 
@@ -25,6 +24,7 @@ import (
 
 type TelegramChannel struct {
 	*BaseChannel
+
 	bot          *telego.Bot
 	commands     TelegramCommander
 	config       *config.Config
@@ -100,7 +100,7 @@ func (c *TelegramChannel) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to start long polling: %w", err)
 	}
 
-	bh, err := telegohandler.NewBotHandler(c.bot, updates)
+	bh, err := th.NewBotHandler(c.bot, updates)
 	if err != nil {
 		return fmt.Errorf("failed to create bot handler: %w", err)
 	}

@@ -170,10 +170,8 @@ func TestDhallConfigLoaderFallback(t *testing.T) {
 	dhallPath := filepath.Join(tmpDir, "config.dhall")
 	os.WriteFile(dhallPath, []byte("{ agents = {}}"), 0o600)
 
-	// Save original PATH and set to empty
-	origPath := os.Getenv("PATH")
-	os.Setenv("PATH", tmpDir) // dir with no dhall-to-json
-	defer os.Setenv("PATH", origPath)
+	// Set PATH to a dir with no dhall-to-json
+	t.Setenv("PATH", tmpDir)
 
 	cfg, err := config.LoadDhallConfig(dhallPath)
 	if !errors.Is(err, config.ErrDhallNotAvailable) {

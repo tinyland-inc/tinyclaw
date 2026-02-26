@@ -30,6 +30,7 @@ const (
 // WeComAppChannel implements the Channel interface for WeCom App (企业微信自建应用)
 type WeComAppChannel struct {
 	*BaseChannel
+
 	config        config.WeComAppConfig
 	server        *http.Server
 	accessToken   string
@@ -580,5 +581,7 @@ func (c *WeComAppChannel) handleHealth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(status)
+	if err := json.NewEncoder(w).Encode(status); err != nil {
+		logger.ErrorCF("wecom", "failed to encode health response", map[string]any{"error": err.Error()})
+	}
 }

@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -219,7 +220,8 @@ func (t *CronTool) listJobs() *ToolResult {
 		return SilentResult("No scheduled jobs")
 	}
 
-	result := "Scheduled jobs:\n"
+	var sb strings.Builder
+	sb.WriteString("Scheduled jobs:\n")
 	for _, j := range jobs {
 		var scheduleInfo string
 		switch {
@@ -232,10 +234,10 @@ func (t *CronTool) listJobs() *ToolResult {
 		default:
 			scheduleInfo = "unknown"
 		}
-		result += fmt.Sprintf("- %s (id: %s, %s)\n", j.Name, j.ID, scheduleInfo)
+		fmt.Fprintf(&sb, "- %s (id: %s, %s)\n", j.Name, j.ID, scheduleInfo)
 	}
 
-	return SilentResult(result)
+	return SilentResult(sb.String())
 }
 
 func (t *CronTool) removeJob(args map[string]any) *ToolResult {

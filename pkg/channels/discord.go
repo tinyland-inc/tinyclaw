@@ -24,6 +24,7 @@ const (
 
 type DiscordChannel struct {
 	*BaseChannel
+
 	session     *discordgo.Session
 	config      config.DiscordConfig
 	transcriber *voice.GroqTranscriber

@@ -124,7 +124,12 @@ func (p *Provider) Chat(
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", p.apiBase+"/chat/completions", bytes.NewReader(jsonData))
+	req, err := http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		p.apiBase+"/chat/completions",
+		bytes.NewReader(jsonData),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -265,8 +270,8 @@ func stripSystemParts(messages []Message) []openaiMessage {
 }
 
 func normalizeModel(model, apiBase string) string {
-	idx := strings.Index(model, "/")
-	if idx == -1 {
+	before, after, ok := strings.Cut(model, "/")
+	if !ok {
 		return model
 	}
 
@@ -274,10 +279,10 @@ func normalizeModel(model, apiBase string) string {
 		return model
 	}
 
-	prefix := strings.ToLower(model[:idx])
+	prefix := strings.ToLower(before)
 	switch prefix {
 	case "moonshot", "nvidia", "groq", "ollama", "deepseek", "google", "openrouter", "zhipu", "mistral":
-		return model[idx+1:]
+		return after
 	default:
 		return model
 	}

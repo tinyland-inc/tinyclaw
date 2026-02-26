@@ -95,7 +95,7 @@ func (t *GroqTranscriber) Transcribe(ctx context.Context, audioFilePath string) 
 	}
 
 	url := t.apiBase + "/audio/transcriptions"
-	req, err := http.NewRequestWithContext(ctx, "POST", url, &requestBody)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, &requestBody)
 	if err != nil {
 		logger.ErrorCF("voice", "Failed to create request", map[string]any{"error": err})
 		return nil, fmt.Errorf("failed to create request: %w", err)

@@ -32,6 +32,7 @@ import (
 // Uses webhook callback mode - simpler than WeCom App but only supports passive replies
 type WeComBotChannel struct {
 	*BaseChannel
+
 	config        config.WeComConfig
 	server        *http.Server
 	ctx           context.Context
@@ -87,7 +88,7 @@ type WeComBotReplyMessage struct {
 	MsgType string `json:"msgtype"`
 	Text    struct {
 		Content string `json:"content"`
-	} `json:"text,omitempty"`
+	} `json:"text,omitzero"`
 }
 
 // NewWeComBotChannel creates a new WeCom Bot channel instance
@@ -475,7 +476,9 @@ func (c *WeComBotChannel) handleHealth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(status)
+	if err := json.NewEncoder(w).Encode(status); err != nil {
+		logger.ErrorCF("wecom", "failed to encode health response", map[string]any{"error": err.Error()})
+	}
 }
 
 // WeCom common utilities for both WeCom Bot and WeCom App
@@ -596,7 +599,7 @@ func pkcs7UnpadWeCom(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("padding size larger than data")
 	}
 	// Verify all padding bytes
-	for i := 0; i < padding; i++ {
+	for i := range padding {
 		if data[len(data)-1-i] != byte(padding) {
 			return nil, fmt.Errorf("invalid padding byte at position %d", i)
 		}

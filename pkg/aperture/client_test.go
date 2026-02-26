@@ -121,7 +121,10 @@ func TestWebhookHandler_ValidEvent(t *testing.T) {
 		Timestamp:    time.Now(),
 		Status:       200,
 	}
-	body, _ := json.Marshal(event)
+	body, err := json.Marshal(event)
+	if err != nil {
+		t.Fatalf("marshal event: %v", err)
+	}
 
 	req := httptest.NewRequest(http.MethodPost, "/webhook/aperture", strings.NewReader(string(body)))
 	req.Header.Set("X-Webhook-Key", "secret-key")
