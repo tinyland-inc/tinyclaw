@@ -1,29 +1,29 @@
-# Build and push container image to GHCR on tinyland branch pushes.
-# Copy this to .github/workflows/ghcr.yml in each fork repo.
+# Build and push container image to GHCR on main branch pushes.
+# Copy this to .github/workflows/ghcr.yml in each agent repo.
 #
 # Tags:
 #   sha-<commit>  — immutable, Renovate tracks these
-#   edge          — rolling latest from tinyland branch
-#   latest        — alias for edge on tinyland
-#   upstream-<tag> — when upstream tags are synced
+#   edge          — rolling latest from main branch
+#   latest        — alias for edge on main
+#   v*            — semver release tags
 #
 # Usage:
-#   1. Copy to fork's .github/workflows/ghcr.yml
-#   2. Update FORK_NAME env var
-#   3. Push to tinyland branch
+#   1. Copy to repo's .github/workflows/ghcr.yml
+#   2. Update REPO_NAME env var
+#   3. Push to main branch
 name: GHCR Build
 
 on:
   push:
-    branches: [tinyland]
-    tags: ['v*', 'upstream-*']
+    branches: [main]
+    tags: ['v*']
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
   OWNER: tinyland-inc
-  # Change this per fork: ironclaw, picoclaw, or hexstrike-ai
-  FORK_NAME: picoclaw
+  # Change this per repo: ironclaw, picoclaw, or hexstrike-ai
+  REPO_NAME: picoclaw
 
 permissions:
   contents: read
@@ -51,12 +51,11 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ env.FORK_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.OWNER }}/${{ env.REPO_NAME }}
           tags: |
             type=sha,prefix=sha-,format=short
-            type=edge,branch=tinyland
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/tinyland' }}
-            type=match,pattern=upstream-(.*),group=1,prefix=upstream-
+            type=edge,branch=main
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=semver,pattern=v{{version}}
 
       - name: Build and push

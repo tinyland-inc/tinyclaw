@@ -1,13 +1,20 @@
-# Weekly upstream sync: merges upstream/main into the tinyland branch.
-# Copy this to .github/workflows/upstream-sync.yml in each fork repo.
+# Reference project check: compares our main branch against a reference project.
+# Copy this to .github/workflows/upstream-sync.yml in each agent repo.
 #
-# When conflicts are detected, creates a PR for manual resolution.
-name: Upstream Sync
+# Since repos are standalone (not GitHub forks), this workflow fetches the
+# reference project directly. Agent-mediated campaigns (oc-upstream-sync,
+# pc-upstream-sync) are the primary mechanism; this is a manual fallback.
+#
+# Set REFERENCE_REPO secret or variable to the reference project (e.g., openclaw/openclaw).
+name: Reference Sync
 
 on:
-  schedule:
-    - cron: '0 6 * * 1'  # Monday 6am UTC
   workflow_dispatch:
+    inputs:
+      reference_repo:
+        description: 'Reference repo (e.g., openclaw/openclaw)'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -15,50 +22,64 @@ permissions:
 
 jobs:
   sync:
-    name: Sync upstream
+    name: Check reference project
     runs-on: ubuntu-latest
+    env:
+      REF_REPO: ${{ inputs.reference_repo || vars.REFERENCE_REPO || '' }}
     steps:
-      - name: Checkout tinyland branch
+      - name: Validate reference repo
+        if: env.REF_REPO == ''
+        run: |
+          echo "::error::No reference repo specified. Set REFERENCE_REPO variable or pass via workflow_dispatch input."
+          exit 1
+
+      - name: Checkout main branch
         uses: actions/checkout@v4
         with:
-          ref: tinyland
+          ref: main
           fetch-depth: 0
 
-      - name: Add upstream remote
+      - name: Add reference remote
         run: |
-          git remote add upstream "$(gh repo view --json parent -q '.parent.url')" || true
-          git fetch upstream
+          git remote add reference "https://github.com/${{ env.REF_REPO }}.git" || true
+          git fetch reference main
 
-      - name: Attempt merge
-        id: merge
+      - name: Compare and report
+        id: compare
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Count commits in reference that aren't in our main
+          AHEAD=$(git rev-list HEAD..reference/main --count 2>/dev/null || echo "0")
+          echo "Reference project is ${AHEAD} commits ahead"
+          echo "ahead=${AHEAD}" >> "$GITHUB_OUTPUT"
 
-          if git merge upstream/main --no-edit; then
-            echo "status=clean" >> "$GITHUB_OUTPUT"
+          if [ "$AHEAD" = "0" ]; then
+            echo "status=current" >> "$GITHUB_OUTPUT"
           else
-            git merge --abort
-            echo "status=conflict" >> "$GITHUB_OUTPUT"
+            echo "status=behind" >> "$GITHUB_OUTPUT"
+            echo ""
+            echo "Recent reference commits not in our main:"
+            git log HEAD..reference/main --oneline --max-count=20
           fi
 
-      - name: Push if clean
-        if: steps.merge.outputs.status == 'clean'
-        run: git push origin tinyland
-
-      - name: Create PR if conflict
-        if: steps.merge.outputs.status == 'conflict'
+      - name: Create tracking issue if behind
+        if: steps.compare.outputs.status == 'behind' && steps.compare.outputs.ahead != '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BRANCH="upstream-sync-$(date +%Y%m%d)"
-          git checkout -b "$BRANCH"
-          git merge upstream/main --no-commit || true
-          git add -A
-          git commit -m "chore: upstream sync (conflicts need resolution)"
-          git push origin "$BRANCH"
-          gh pr create \
-            --title "chore: upstream sync $(date +%Y-%m-%d)" \
-            --body "Automated upstream sync has merge conflicts that need manual resolution." \
-            --base tinyland \
-            --head "$BRANCH"
+          AHEAD=${{ steps.compare.outputs.ahead }}
+          COMMITS=$(git log HEAD..reference/main --oneline --max-count=20)
+          gh issue create \
+            --title "Reference sync: ${AHEAD} commits to evaluate from ${{ env.REF_REPO }}" \
+            --body "$(cat <<EOF
+          The reference project (\`${{ env.REF_REPO }}\`) has **${AHEAD}** commits not in our main branch.
+
+          ## Recent commits to evaluate
+          \`\`\`
+          ${COMMITS}
+          \`\`\`
+
+          Review these changes and selectively adopt any that are relevant to our deployment.
+          Agent campaigns (oc-upstream-sync / pc-upstream-sync) handle this automatically.
+          EOF
+          )" \
+            --label "reference-sync"
