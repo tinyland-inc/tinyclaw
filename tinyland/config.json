@@ -6,7 +6,8 @@
       "model_name": "claude-haiku",
       "max_tokens": 8192,
       "temperature": 0.3,
-      "max_tool_iterations": 30
+      "max_tool_iterations": 30,
+      "timeout_seconds": 180
     }
   },
   "model_list": [
@@ -39,6 +40,13 @@
     "provider": "duckduckgo"
   },
   "skills": {
-    "enabled": ["github", "summarize"]
+    "enabled": ["github", "summarize", "rj-platform", "identity-mgmt"]
+  },
+  "session": {
+    "max_entries": 100,
+    "prune_after_days": 7
+  },
+  "logging": {
+    "level": "info"
   }
 }

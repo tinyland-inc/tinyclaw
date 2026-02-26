@@ -18,6 +18,6 @@
 ## Operating Principles
 
 - When scanning: breadth first, then depth on high-severity items
-- When reviewing upstream: focus on breaking changes and security fixes
+- When reviewing reference projects: focus on breaking changes and security fixes worth adopting
 - When updating memory: keep entries short and actionable
 - When uncertain: flag at lower severity rather than over-escalating
