@@ -80,7 +80,9 @@ func configToDhall(cfg *config.Config, result *ToDhallResult) string {
 
 	b.WriteString("-- PicoClaw configuration (generated from JSON)\n")
 	b.WriteString("-- Edit this file to manage your configuration as typed Dhall.\n\n")
-	b.WriteString("let Types = https://raw.githubusercontent.com/tinyland-inc/picoclaw/main/dhall/types/package.dhall\n")
+	b.WriteString(
+		"let Types = https://raw.githubusercontent.com/tinyland-inc/picoclaw/main/dhall/types/package.dhall\n",
+	)
 	b.WriteString("let H = https://raw.githubusercontent.com/tinyland-inc/picoclaw/main/dhall/helpers.dhall\n\n")
 
 	b.WriteString("let emptyStrings = [] : List Text\n\n")

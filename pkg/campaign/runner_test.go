@@ -135,8 +135,8 @@ func TestRunner_KillSwitch(t *testing.T) {
 	time.Sleep(600 * time.Millisecond)
 
 	exec, _ := runner.GetStatus("killable")
-	if exec.Status != StatusCancelled {
-		t.Errorf("expected cancelled, got %s", exec.Status)
+	if exec.Status != StatusCanceled {
+		t.Errorf("expected canceled, got %s", exec.Status)
 	}
 }
 

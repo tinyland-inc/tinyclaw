@@ -22,7 +22,7 @@ const (
 	StatusRunning   Status = "running"
 	StatusCompleted Status = "completed"
 	StatusFailed    Status = "failed"
-	StatusCancelled Status = "cancelled"
+	StatusCanceled Status = "canceled"
 )
 
 // FeedbackPolicy determines how campaign results are delivered.
@@ -187,7 +187,7 @@ func (r *Runner) Stop(campaignID string) error {
 	}
 
 	exec.KillSwitchUsed = true
-	exec.Status = StatusCancelled
+	exec.Status = StatusCanceled
 	exec.EndTime = time.Now()
 
 	if cancel, ok := r.cancel[campaignID]; ok {
@@ -241,7 +241,7 @@ func (r *Runner) run(ctx context.Context, exec *Execution) {
 		if ctx.Err() != nil {
 			r.mu.Lock()
 			if exec.Status == StatusRunning {
-				exec.Status = StatusCancelled
+				exec.Status = StatusCanceled
 				exec.Error = ctx.Err().Error()
 			}
 			exec.EndTime = time.Now()

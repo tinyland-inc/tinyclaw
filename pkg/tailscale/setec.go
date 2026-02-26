@@ -60,7 +60,10 @@ func (c *SetecClient) Get(ctx context.Context, name string) (string, error) {
 	//
 	// For now, return an error indicating Setec is not yet connected.
 	logger.InfoCF("setec", "Secret lookup", map[string]any{"name": fullName})
-	return "", fmt.Errorf("setec client not connected: secret %q unavailable (requires tailscale.com/setec dependency)", fullName)
+	return "", fmt.Errorf(
+		"setec client not connected: secret %q unavailable (requires tailscale.com/setec dependency)",
+		fullName,
+	)
 }
 
 // Put stores a secret in Setec.

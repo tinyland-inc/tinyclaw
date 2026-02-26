@@ -524,8 +524,8 @@ type ClawHubRegistryConfig struct {
 // LoadDhallConfig loads configuration from a .dhall file by invoking dhall-to-json
 // and parsing the resulting JSON. Returns nil, nil if dhall-to-json is not available.
 func LoadDhallConfig(path string) (*Config, error) {
-	dhallBin, err := exec.LookPath("dhall-to-json")
-	if err != nil {
+	dhallBin, lookErr := exec.LookPath("dhall-to-json")
+	if lookErr != nil {
 		return nil, nil // dhall-to-json not installed, caller should fall back
 	}
 

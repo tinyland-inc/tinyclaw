@@ -21,9 +21,9 @@ import (
 // Config holds Aperture proxy configuration.
 type Config struct {
 	Enabled    bool   `json:"enabled"`
-	ProxyURL   string `json:"proxy_url"`    // Aperture proxy endpoint
-	WebhookURL string `json:"webhook_url"`  // Webhook endpoint for metering events
-	WebhookKey string `json:"webhook_key"`  // Shared key for webhook authentication
+	ProxyURL   string `json:"proxy_url"`   // Aperture proxy endpoint
+	WebhookURL string `json:"webhook_url"` // Webhook endpoint for metering events
+	WebhookKey string `json:"webhook_key"` // Shared key for webhook authentication
 }
 
 // UsageEvent represents a token usage event received from Aperture.
@@ -73,8 +73,8 @@ func (c *Client) ProxyTransport() http.RoundTripper {
 		return http.DefaultTransport
 	}
 	return &apertureTransport{
-		proxyURL:  c.proxyURL,
-		inner:     http.DefaultTransport,
+		proxyURL: c.proxyURL,
+		inner:    http.DefaultTransport,
 	}
 }
 

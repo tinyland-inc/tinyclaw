@@ -52,10 +52,3 @@ func (a *StubAdapter) Execute(_ context.Context, agentID, prompt string, _ []str
 func (a *StubAdapter) Name() string { return a.BackendName }
 
 var _ campaign.BackendAdapter = (*StubAdapter)(nil)
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
