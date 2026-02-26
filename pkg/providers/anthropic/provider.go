@@ -144,7 +144,13 @@ func buildParams(
 					blocks = append(blocks, anthropic.NewTextBlock(msg.Content))
 				}
 				for _, tc := range msg.ToolCalls {
-					blocks = append(blocks, anthropic.NewToolUseBlock(tc.ID, tc.Arguments, tc.Name))
+					// Marshal arguments to json.RawMessage so the SDK's custom
+					// serializer emits a raw JSON object, not a Go map.
+					inputJSON, err := json.Marshal(tc.Arguments)
+					if err != nil {
+						return anthropic.MessageNewParams{}, fmt.Errorf("marshal tool_use input: %w", err)
+					}
+					blocks = append(blocks, anthropic.NewToolUseBlock(tc.ID, json.RawMessage(inputJSON), tc.Name))
 				}
 				anthropicMessages = append(anthropicMessages, anthropic.NewAssistantMessage(blocks...))
 			} else {
