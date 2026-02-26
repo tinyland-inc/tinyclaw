@@ -2,6 +2,7 @@ package tailscale
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -39,7 +40,7 @@ func NewSetecClient(cfg SetecConfig) *SetecClient {
 // The name is automatically prefixed with the configured prefix.
 func (c *SetecClient) Get(ctx context.Context, name string) (string, error) {
 	if !c.config.Enabled {
-		return "", fmt.Errorf("setec not enabled")
+		return "", errors.New("setec not enabled")
 	}
 
 	fullName := c.config.Prefix + name
@@ -69,7 +70,7 @@ func (c *SetecClient) Get(ctx context.Context, name string) (string, error) {
 // Put stores a secret in Setec.
 func (c *SetecClient) Put(ctx context.Context, name, value string) error {
 	if !c.config.Enabled {
-		return fmt.Errorf("setec not enabled")
+		return errors.New("setec not enabled")
 	}
 
 	fullName := c.config.Prefix + name

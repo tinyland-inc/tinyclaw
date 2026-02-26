@@ -41,6 +41,7 @@ func NewGroqTranscriber(apiKey string) *GroqTranscriber {
 	}
 }
 
+//nolint:funlen // transcription: multipart form build, HTTP send, and response parse
 func (t *GroqTranscriber) Transcribe(ctx context.Context, audioFilePath string) (*TranscriptionResponse, error) {
 	logger.InfoCF("voice", "Starting transcription", map[string]any{"audio_file": audioFilePath})
 

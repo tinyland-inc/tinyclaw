@@ -44,7 +44,7 @@ func TestNewCronCommand(t *testing.T) {
 		found := slices.Contains(allowedCommands, subcmd.Name())
 		assert.True(t, found, "unexpected subcommand %q", subcmd.Name())
 
-		assert.Len(t, subcmd.Aliases, 0)
+		assert.Empty(t, subcmd.Aliases)
 		assert.False(t, subcmd.Hidden)
 
 		assert.False(t, subcmd.HasSubCommands())

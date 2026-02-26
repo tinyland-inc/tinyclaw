@@ -24,5 +24,5 @@ func TestNewInstallSubcommand(t *testing.T) {
 	assert.True(t, cmd.HasFlags())
 	assert.NotNil(t, cmd.Flags().Lookup("registry"))
 
-	assert.Len(t, cmd.Aliases, 0)
+	assert.Empty(t, cmd.Aliases)
 }

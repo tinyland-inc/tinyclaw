@@ -7,6 +7,7 @@ package campaign
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -138,13 +139,13 @@ func (r *Runner) RegisterAdapter(backend string, adapter BackendAdapter) {
 // Start begins executing a campaign asynchronously.
 func (r *Runner) Start(ctx context.Context, def *Definition) (*Execution, error) {
 	if def == nil {
-		return nil, fmt.Errorf("campaign definition is nil")
+		return nil, errors.New("campaign definition is nil")
 	}
 	if def.ID == "" {
-		return nil, fmt.Errorf("campaign ID is required")
+		return nil, errors.New("campaign ID is required")
 	}
 	if len(def.Steps) == 0 {
-		return nil, fmt.Errorf("campaign must have at least one step")
+		return nil, errors.New("campaign must have at least one step")
 	}
 
 	r.mu.Lock()
@@ -227,6 +228,8 @@ func (r *Runner) ListExecutions() []*Execution {
 }
 
 // run executes a campaign step by step.
+//
+//nolint:funlen // campaign execution: sequential step processing with state transitions
 func (r *Runner) run(ctx context.Context, exec *Execution) {
 	defer func() {
 		r.mu.Lock()
@@ -253,7 +256,7 @@ func (r *Runner) run(ctx context.Context, exec *Execution) {
 		if reason := checkGuardrails(exec, &def.Guardrails); reason != "" {
 			r.mu.Lock()
 			exec.Status = StatusFailed
-			exec.Error = fmt.Sprintf("guardrail: %s", reason)
+			exec.Error = "guardrail: " + reason
 			exec.EndTime = time.Now()
 			r.mu.Unlock()
 			return

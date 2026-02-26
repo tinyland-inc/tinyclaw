@@ -1,7 +1,7 @@
 package skills
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/spf13/cobra"
 
@@ -22,13 +22,13 @@ picoclaw skills install --registry clawhub github
 		Args: func(cmd *cobra.Command, args []string) error {
 			if registry != "" {
 				if len(args) != 2 {
-					return fmt.Errorf("when --registry is set, exactly 2 arguments are required: <name> <slug>")
+					return errors.New("when --registry is set, exactly 2 arguments are required: <name> <slug>")
 				}
 				return nil
 			}
 
 			if len(args) != 1 {
-				return fmt.Errorf("exactly 1 argument is required: <github>")
+				return errors.New("exactly 1 argument is required: <github>")
 			}
 
 			return nil

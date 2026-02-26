@@ -5,6 +5,7 @@ package channels
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -43,7 +44,7 @@ func NewFeishuChannel(cfg config.FeishuConfig, bus *bus.MessageBus) (*FeishuChan
 
 func (c *FeishuChannel) Start(ctx context.Context) error {
 	if c.config.AppID == "" || c.config.AppSecret == "" {
-		return fmt.Errorf("feishu app_id or app_secret is empty")
+		return errors.New("feishu app_id or app_secret is empty")
 	}
 
 	dispatcher := larkdispatcher.NewEventDispatcher(c.config.VerificationToken, c.config.EncryptKey).
@@ -91,11 +92,11 @@ func (c *FeishuChannel) Stop(ctx context.Context) error {
 
 func (c *FeishuChannel) Send(ctx context.Context, msg bus.OutboundMessage) error {
 	if !c.IsRunning() {
-		return fmt.Errorf("feishu channel not running")
+		return errors.New("feishu channel not running")
 	}
 
 	if msg.ChatID == "" {
-		return fmt.Errorf("chat ID is empty")
+		return errors.New("chat ID is empty")
 	}
 
 	payload, err := json.Marshal(map[string]string{"text": msg.Content})

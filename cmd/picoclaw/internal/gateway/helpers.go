@@ -40,6 +40,7 @@ const (
 	GatewayModeVerified
 )
 
+//nolint:funlen,gocognit,gocyclo,maintidx,nestif // complex gateway setup: orchestrates many subsystems
 func gatewayCmd(debug bool, mode GatewayMode) error {
 	if debug {
 		logger.SetLevel(logger.DEBUG)

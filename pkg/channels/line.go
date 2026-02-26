@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -57,7 +58,7 @@ type LINEChannel struct {
 // NewLINEChannel creates a new LINE channel instance.
 func NewLINEChannel(cfg config.LINEConfig, messageBus *bus.MessageBus) (*LINEChannel, error) {
 	if cfg.ChannelSecret == "" || cfg.ChannelAccessToken == "" {
-		return nil, fmt.Errorf("line channel_secret and channel_access_token are required")
+		return nil, errors.New("line channel_secret and channel_access_token are required")
 	}
 
 	base := NewBaseChannel("line", cfg, messageBus, cfg.AllowFrom)
@@ -265,6 +266,7 @@ type lineMentionee struct {
 	UserID string `json:"userId"`
 }
 
+//nolint:funlen,gocyclo // processes all LINE event types in a single dispatch function
 func (c *LINEChannel) processEvent(event lineEvent) {
 	if event.Type != "message" {
 		logger.DebugCF("line", "Ignoring non-message event", map[string]any{
@@ -393,6 +395,8 @@ func (c *LINEChannel) processEvent(event lineEvent) {
 // It first checks the mention metadata (userId match), then falls back
 // to text-based detection using the bot's display name, since LINE may
 // not include userId in mentionees for Official Accounts.
+//
+//nolint:gocognit,nestif // mention detection: checks metadata and text fallback with nested range
 func (c *LINEChannel) isBotMentioned(msg lineMessage) bool {
 	// Check mention metadata
 	if msg.Mention != nil {
@@ -432,6 +436,8 @@ func (c *LINEChannel) isBotMentioned(msg lineMessage) bool {
 }
 
 // stripBotMention removes the @BotName mention text from the message.
+//
+//nolint:gocognit,nestif // strips mention via metadata indices or text scan with rune handling
 func (c *LINEChannel) stripBotMention(text string, msg lineMessage) string {
 	stripped := false
 
@@ -492,7 +498,7 @@ func (c *LINEChannel) resolveChatID(source lineSource) string {
 // using a cached reply token, then falls back to the Push API.
 func (c *LINEChannel) Send(ctx context.Context, msg bus.OutboundMessage) error {
 	if !c.IsRunning() {
-		return fmt.Errorf("line channel not running")
+		return errors.New("line channel not running")
 	}
 
 	// Load and consume quote token for this chat

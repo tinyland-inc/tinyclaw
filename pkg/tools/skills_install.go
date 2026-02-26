@@ -67,6 +67,7 @@ func (t *InstallSkillTool) Parameters() map[string]any {
 	}
 }
 
+//nolint:funlen // skill install: validates, downloads, and handles malware/suspicious flags
 func (t *InstallSkillTool) Execute(ctx context.Context, args map[string]any) *ToolResult {
 	// Install lock to prevent concurrent directory operations.
 	// Ideally this should be done at a `slug` level, currently, its at a `workspace` level.

@@ -6,6 +6,7 @@
 package providers
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/tinyland-inc/picoclaw/pkg/config"
@@ -25,7 +26,7 @@ func CreateProvider(cfg *config.Config) (LLMProvider, string, error) {
 
 	// Must have model_list at this point
 	if len(cfg.ModelList) == 0 {
-		return nil, "", fmt.Errorf("no providers configured. Please add entries to model_list in your config")
+		return nil, "", errors.New("no providers configured. Please add entries to model_list in your config")
 	}
 
 	// Get model config from model_list

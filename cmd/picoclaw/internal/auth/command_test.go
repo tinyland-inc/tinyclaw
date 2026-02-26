@@ -16,7 +16,7 @@ func TestNewAuthCommand(t *testing.T) {
 	assert.Equal(t, "auth", cmd.Use)
 	assert.Equal(t, "Manage authentication (login, logout, status)", cmd.Short)
 
-	assert.Len(t, cmd.Aliases, 0)
+	assert.Empty(t, cmd.Aliases)
 
 	assert.Nil(t, cmd.Run)
 	assert.NotNil(t, cmd.RunE)
@@ -41,7 +41,7 @@ func TestNewAuthCommand(t *testing.T) {
 		found := slices.Contains(allowedCommands, subcmd.Name())
 		assert.True(t, found, "unexpected subcommand %q", subcmd.Name())
 
-		assert.Len(t, subcmd.Aliases, 0)
+		assert.Empty(t, subcmd.Aliases)
 		assert.False(t, subcmd.Hidden)
 
 		assert.False(t, subcmd.HasSubCommands())

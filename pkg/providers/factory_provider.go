@@ -6,6 +6,7 @@
 package providers
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -20,7 +21,7 @@ func createClaudeAuthProvider() (LLMProvider, error) {
 		return nil, fmt.Errorf("loading auth credentials: %w", err)
 	}
 	if cred == nil {
-		return nil, fmt.Errorf("no credentials for anthropic. Run: picoclaw auth login --provider anthropic")
+		return nil, errors.New("no credentials for anthropic. Run: picoclaw auth login --provider anthropic")
 	}
 	return NewClaudeProviderWithTokenSource(cred.AccessToken, createClaudeTokenSource()), nil
 }
@@ -32,7 +33,7 @@ func createCodexAuthProvider() (LLMProvider, error) {
 		return nil, fmt.Errorf("loading auth credentials: %w", err)
 	}
 	if cred == nil {
-		return nil, fmt.Errorf("no credentials for openai. Run: picoclaw auth login --provider openai")
+		return nil, errors.New("no credentials for openai. Run: picoclaw auth login --provider openai")
 	}
 	return NewCodexProviderWithTokenSource(cred.AccessToken, cred.AccountID, createCodexTokenSource()), nil
 }
@@ -56,13 +57,15 @@ func ExtractProtocol(model string) (protocol, modelID string) {
 // It uses the protocol prefix in the Model field to determine which provider to create.
 // Supported protocols: openai, anthropic, antigravity, claude-cli, codex-cli, github-copilot
 // Returns the provider, the model ID (without protocol prefix), and any error.
+//
+//nolint:funlen,gocognit,gocyclo // factory switch: one case per supported provider protocol
 func CreateProviderFromConfig(cfg *config.ModelConfig) (LLMProvider, string, error) {
 	if cfg == nil {
-		return nil, "", fmt.Errorf("config is nil")
+		return nil, "", errors.New("config is nil")
 	}
 
 	if cfg.Model == "" {
-		return nil, "", fmt.Errorf("model is required")
+		return nil, "", errors.New("model is required")
 	}
 
 	protocol, modelID := ExtractProtocol(cfg.Model)

@@ -15,7 +15,7 @@ func TestNewSkillsCommand(t *testing.T) {
 	assert.Equal(t, "skills", cmd.Use)
 	assert.Equal(t, "Manage skills", cmd.Short)
 
-	assert.Len(t, cmd.Aliases, 0)
+	assert.Empty(t, cmd.Aliases)
 
 	assert.False(t, cmd.HasFlags())
 

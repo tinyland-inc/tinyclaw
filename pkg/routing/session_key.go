@@ -43,6 +43,8 @@ func BuildAgentMainSessionKey(agentID string) string {
 }
 
 // BuildAgentPeerSessionKey constructs a session key based on agent, channel, peer, and DM scope.
+//
+//nolint:nestif // key construction: nested peer kind and DM scope checks
 func BuildAgentPeerSessionKey(params SessionKeyParams) string {
 	agentID := NormalizeAgentID(params.AgentID)
 

@@ -43,6 +43,7 @@ func NewManager(cfg *config.Config, messageBus *bus.MessageBus) (*Manager, error
 	return m, nil
 }
 
+//nolint:funlen,gocognit,gocyclo // initializes all channel types; one branch per channel kind
 func (m *Manager) initChannels() error { //nolint:unparam // error return kept for future use
 	logger.InfoC("channels", "Initializing channel manager")
 

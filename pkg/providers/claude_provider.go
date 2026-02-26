@@ -2,6 +2,7 @@ package providers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	anthropicprovider "github.com/tinyland-inc/picoclaw/pkg/providers/anthropic"
@@ -62,7 +63,7 @@ func createClaudeTokenSource() func() (string, error) {
 			return "", fmt.Errorf("loading auth credentials: %w", err)
 		}
 		if cred == nil {
-			return "", fmt.Errorf("no credentials for anthropic. Run: picoclaw auth login --provider anthropic")
+			return "", errors.New("no credentials for anthropic. Run: picoclaw auth login --provider anthropic")
 		}
 		return cred.AccessToken, nil
 	}

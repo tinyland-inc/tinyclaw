@@ -2,11 +2,13 @@ package channels
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -105,25 +107,40 @@ func (c *TelegramChannel) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to create bot handler: %w", err)
 	}
 
-	bh.HandleMessage(func(ctx *th.Context, message telego.Message) error {
-		c.commands.Help(ctx, message)
-		return nil
-	}, th.CommandEqual("help"))
-	bh.HandleMessage(func(ctx *th.Context, message telego.Message) error {
-		return c.commands.Start(ctx, message)
-	}, th.CommandEqual("start"))
+	bh.HandleMessage(
+		func(ctx *th.Context, message telego.Message) error { //nolint:contextcheck // telego handler callback; ctx is th.Context, not context.Context
+			c.commands.Help(ctx, message)
+			return nil
+		},
+		th.CommandEqual("help"),
+	)
+	bh.HandleMessage(
+		func(ctx *th.Context, message telego.Message) error { //nolint:contextcheck // telego handler callback; ctx is th.Context, not context.Context
+			return c.commands.Start(ctx, message)
+		},
+		th.CommandEqual("start"),
+	)
 
-	bh.HandleMessage(func(ctx *th.Context, message telego.Message) error {
-		return c.commands.Show(ctx, message)
-	}, th.CommandEqual("show"))
+	bh.HandleMessage(
+		func(ctx *th.Context, message telego.Message) error { //nolint:contextcheck // telego handler callback; ctx is th.Context, not context.Context
+			return c.commands.Show(ctx, message)
+		},
+		th.CommandEqual("show"),
+	)
 
-	bh.HandleMessage(func(ctx *th.Context, message telego.Message) error {
-		return c.commands.List(ctx, message)
-	}, th.CommandEqual("list"))
+	bh.HandleMessage(
+		func(ctx *th.Context, message telego.Message) error { //nolint:contextcheck // telego handler callback; ctx is th.Context, not context.Context
+			return c.commands.List(ctx, message)
+		},
+		th.CommandEqual("list"),
+	)
 
-	bh.HandleMessage(func(ctx *th.Context, message telego.Message) error {
-		return c.handleMessage(ctx, &message)
-	}, th.AnyMessage())
+	bh.HandleMessage(
+		func(ctx *th.Context, message telego.Message) error { //nolint:contextcheck // telego handler callback; ctx is th.Context, not context.Context
+			return c.handleMessage(ctx, &message)
+		},
+		th.AnyMessage(),
+	)
 
 	c.setRunning(true)
 	logger.InfoCF("telegram", "Telegram bot connected", map[string]any{
@@ -148,7 +165,7 @@ func (c *TelegramChannel) Stop(ctx context.Context) error {
 
 func (c *TelegramChannel) Send(ctx context.Context, msg bus.OutboundMessage) error {
 	if !c.IsRunning() {
-		return fmt.Errorf("telegram bot not running")
+		return errors.New("telegram bot not running")
 	}
 
 	chatID, err := parseChatID(msg.ChatID)
@@ -194,19 +211,20 @@ func (c *TelegramChannel) Send(ctx context.Context, msg bus.OutboundMessage) err
 	return nil
 }
 
+//nolint:funlen,gocognit,gocyclo,nestif // Telegram message handler: media types, mentions, and auth checks
 func (c *TelegramChannel) handleMessage(ctx context.Context, message *telego.Message) error {
 	if message == nil {
-		return fmt.Errorf("message is nil")
+		return errors.New("message is nil")
 	}
 
 	user := message.From
 	if user == nil {
-		return fmt.Errorf("message sender (user) is nil")
+		return errors.New("message sender (user) is nil")
 	}
 
-	senderID := fmt.Sprintf("%d", user.ID)
+	senderID := strconv.FormatInt(user.ID, 10)
 	if user.Username != "" {
-		senderID = fmt.Sprintf("%d|%s", user.ID, user.Username)
+		senderID = strconv.FormatInt(user.ID, 10) + "|" + user.Username
 	}
 
 	// check allowlist to avoid downloading attachments for rejected users
@@ -325,7 +343,7 @@ func (c *TelegramChannel) handleMessage(ctx context.Context, message *telego.Mes
 
 	logger.DebugCF("telegram", "Received message", map[string]any{
 		"sender_id": senderID,
-		"chat_id":   fmt.Sprintf("%d", chatID),
+		"chat_id":   strconv.FormatInt(chatID, 10),
 		"preview":   utils.Truncate(content, 50),
 	})
 
@@ -338,7 +356,7 @@ func (c *TelegramChannel) handleMessage(ctx context.Context, message *telego.Mes
 	}
 
 	// Stop any previous thinking animation
-	chatIDStr := fmt.Sprintf("%d", chatID)
+	chatIDStr := strconv.FormatInt(chatID, 10)
 	if prevStop, ok := c.stopThinking.Load(chatIDStr); ok {
 		if cf, ok := prevStop.(*thinkingCancel); ok && cf != nil {
 			cf.Cancel()
@@ -356,23 +374,23 @@ func (c *TelegramChannel) handleMessage(ctx context.Context, message *telego.Mes
 	}
 
 	peerKind := "direct"
-	peerID := fmt.Sprintf("%d", user.ID)
+	peerID := strconv.FormatInt(user.ID, 10)
 	if message.Chat.Type != "private" {
 		peerKind = "group"
-		peerID = fmt.Sprintf("%d", chatID)
+		peerID = strconv.FormatInt(chatID, 10)
 	}
 
 	metadata := map[string]string{
-		"message_id": fmt.Sprintf("%d", message.MessageID),
-		"user_id":    fmt.Sprintf("%d", user.ID),
+		"message_id": strconv.Itoa(message.MessageID),
+		"user_id":    strconv.FormatInt(user.ID, 10),
 		"username":   user.Username,
 		"first_name": user.FirstName,
-		"is_group":   fmt.Sprintf("%t", message.Chat.Type != "private"),
+		"is_group":   strconv.FormatBool(message.Chat.Type != "private"),
 		"peer_kind":  peerKind,
 		"peer_id":    peerID,
 	}
 
-	c.HandleMessage(fmt.Sprintf("%d", user.ID), fmt.Sprintf("%d", chatID), content, mediaPaths, metadata)
+	c.HandleMessage(strconv.FormatInt(user.ID, 10), strconv.FormatInt(chatID, 10), content, mediaPaths, metadata)
 	return nil
 }
 

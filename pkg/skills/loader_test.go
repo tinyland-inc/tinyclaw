@@ -68,7 +68,7 @@ func TestSkillsInfoValidate(t *testing.T) {
 			}
 			err := info.validate()
 			if tc.wantErr {
-				assert.Error(t, err)
+				require.Error(t, err)
 				for _, msg := range tc.errContains {
 					assert.ErrorContains(t, err, msg)
 				}

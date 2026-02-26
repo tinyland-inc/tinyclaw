@@ -142,9 +142,9 @@ func TestJaccardSimilarityEdgeCases(t *testing.T) {
 	empty := buildTrigrams("")
 	nonempty := buildTrigrams("hello")
 
-	assert.Equal(t, 1.0, jaccardSimilarity(empty, empty))
-	assert.Equal(t, 0.0, jaccardSimilarity(empty, nonempty))
-	assert.Equal(t, 0.0, jaccardSimilarity(nonempty, empty))
+	assert.InDelta(t, 1.0, jaccardSimilarity(empty, empty), 1e-9)
+	assert.InDelta(t, 0.0, jaccardSimilarity(empty, nonempty), 1e-9)
+	assert.InDelta(t, 0.0, jaccardSimilarity(nonempty, empty), 1e-9)
 }
 
 func TestSearchCacheConcurrency(t *testing.T) {

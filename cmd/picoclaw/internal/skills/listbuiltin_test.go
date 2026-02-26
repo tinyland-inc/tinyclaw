@@ -22,5 +22,5 @@ func TestNewListbuiltinSubcommand(t *testing.T) {
 
 	assert.False(t, cmd.HasFlags())
 
-	assert.Len(t, cmd.Aliases, 0)
+	assert.Empty(t, cmd.Aliases)
 }

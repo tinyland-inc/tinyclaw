@@ -61,7 +61,9 @@ func (s *Service) Start(ctx context.Context) error {
 	s.ctx, s.cancel = context.WithCancel(ctx)
 
 	for _, src := range s.sources {
-		eventCh, err := src.Start(s.ctx)
+		eventCh, err := src.Start( //nolint:contextcheck // s.ctx derived from ctx via WithCancel
+			s.ctx,
+		)
 		if err != nil {
 			logger.ErrorCF("devices", "Failed to start source", map[string]any{
 				"kind":  src.Kind(),

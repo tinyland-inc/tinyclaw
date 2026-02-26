@@ -139,7 +139,7 @@ func (c *cmd) List(ctx context.Context, message telego.Message) error {
 		if c.config.Channels.Slack.Enabled {
 			enabled = append(enabled, "slack")
 		}
-		response = fmt.Sprintf("Enabled Channels:\n- %s", strings.Join(enabled, "\n- "))
+		response = "Enabled Channels:\n- " + strings.Join(enabled, "\n- ")
 
 	default:
 		response = fmt.Sprintf("Unknown parameter: %s. Try 'models' or 'channels'.", args)

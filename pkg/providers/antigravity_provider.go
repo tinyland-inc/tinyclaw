@@ -46,6 +46,8 @@ func NewAntigravityProvider() *AntigravityProvider {
 // Chat implements LLMProvider.Chat using the Cloud Code Assist v1internal API.
 // The v1internal endpoint wraps the standard Gemini request in an envelope with
 // project, model, request, requestType, userAgent, and requestId fields.
+//
+//nolint:funlen // chat method: token refresh, request build, SSE parse, and retry logic
 func (p *AntigravityProvider) Chat(
 	ctx context.Context,
 	messages []Message,
@@ -90,7 +92,7 @@ func (p *AntigravityProvider) Chat(
 	}
 
 	// Build API URL — uses Cloud Code Assist v1internal streaming endpoint
-	apiURL := fmt.Sprintf("%s/v1internal:streamGenerateContent?alt=sse", antigravityBaseURL)
+	apiURL := antigravityBaseURL + "/v1internal:streamGenerateContent?alt=sse"
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, bytes.NewReader(bodyBytes))
 	if err != nil {
@@ -143,7 +145,7 @@ func (p *AntigravityProvider) Chat(
 
 	// Check for empty response (some models might return valid success but empty text)
 	if llmResp.Content == "" && len(llmResp.ToolCalls) == 0 {
-		return nil, fmt.Errorf(
+		return nil, errors.New(
 			"antigravity: model returned an empty response (this model might be invalid or restricted)",
 		)
 	}
@@ -207,6 +209,7 @@ type antigravityGenConfig struct {
 	Temperature     float64 `json:"temperature,omitempty"`
 }
 
+//nolint:funlen,gocognit,gocyclo // builds Gemini request: maps all message roles, tool definitions, and options
 func (p *AntigravityProvider) buildRequest(
 	messages []Message,
 	tools []ToolDefinition,
@@ -408,6 +411,7 @@ type antigravityJSONResponse struct {
 	} `json:"usageMetadata"`
 }
 
+//nolint:gocognit // parses SSE stream: accumulates parts across many event types
 func (p *AntigravityProvider) parseSSEResponse(body string) (*LLMResponse, error) {
 	var contentParts []string
 	var toolCalls []ToolCall
@@ -570,7 +574,7 @@ func createAntigravityTokenSource() func() (string, string, error) {
 	return func() (string, string, error) {
 		cred, err := auth.GetCredential("google-antigravity")
 		if errors.Is(err, auth.ErrCredentialNotFound) {
-			return "", "", fmt.Errorf(
+			return "", "", errors.New(
 				"no credentials for google-antigravity. Run: picoclaw auth login --provider google-antigravity",
 			)
 		}
@@ -596,7 +600,7 @@ func createAntigravityTokenSource() func() (string, string, error) {
 		}
 
 		if cred.IsExpired() {
-			return "", "", fmt.Errorf(
+			return "", "", errors.New(
 				"antigravity credentials expired. Run: picoclaw auth login --provider google-antigravity",
 			)
 		}
@@ -667,7 +671,7 @@ func FetchAntigravityProjectID(accessToken string) (string, error) {
 	}
 
 	if result.CloudAICompanionProject == "" {
-		return "", fmt.Errorf("no project ID in loadCodeAssist response")
+		return "", errors.New("no project ID in loadCodeAssist response")
 	}
 
 	return result.CloudAICompanionProject, nil
@@ -785,6 +789,7 @@ func randomString(n int) string {
 	return string(b)
 }
 
+//nolint:nestif // error parsing: nested quota detail extraction for rate limit errors
 func (p *AntigravityProvider) parseAntigravityError(statusCode int, body []byte) error {
 	var errResp struct {
 		Error struct {

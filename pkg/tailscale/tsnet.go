@@ -8,6 +8,7 @@ package tailscale
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -57,7 +58,7 @@ func (s *Server) Start(ctx context.Context) error {
 	defer s.mu.Unlock()
 
 	if s.running {
-		return fmt.Errorf("tsnet server already running")
+		return errors.New("tsnet server already running")
 	}
 
 	if !s.config.Enabled {

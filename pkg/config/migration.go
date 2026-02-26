@@ -34,6 +34,8 @@ type providerMigrationConfig struct {
 // ConvertProvidersToModelList converts the old ProvidersConfig to a slice of ModelConfig.
 // This enables backward compatibility with existing configurations.
 // It preserves the user's configured model from agents.defaults.model when possible.
+//
+//nolint:funlen,gocognit,gocyclo,maintidx // complex config migration: one branch per provider type
 func ConvertProvidersToModelList(cfg *Config) []ModelConfig {
 	if cfg == nil {
 		return nil

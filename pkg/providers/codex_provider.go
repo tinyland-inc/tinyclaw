@@ -56,6 +56,7 @@ func NewCodexProviderWithTokenSource(
 	return p
 }
 
+//nolint:funlen,nestif // Codex chat: token resolve, request build, response parse with nested checks
 func (p *CodexProvider) Chat(
 	ctx context.Context, messages []Message, tools []ToolDefinition, model string, options map[string]any,
 ) (*LLMResponse, error) {
@@ -148,7 +149,7 @@ func (p *CodexProvider) Chat(
 			"account_id_present": accountID != "",
 		}
 		logger.ErrorCF("provider.codex", "Codex stream ended without completed response event", fields)
-		return nil, fmt.Errorf("codex API call: stream ended without completed response")
+		return nil, errors.New("codex API call: stream ended without completed response")
 	}
 
 	return parseCodexResponse(resp), nil
@@ -200,6 +201,7 @@ func resolveCodexModel(model string) (string, string) {
 	return codexDefaultModel, "unsupported model family"
 }
 
+//nolint:gocognit // builds Codex params: maps message history, tools, and all option fields
 func buildCodexParams(
 	messages []Message, tools []ToolDefinition, model string, options map[string]any, enableWebSearch bool,
 ) responses.ResponseNewParams {
@@ -416,7 +418,7 @@ func createCodexTokenSource() func() (string, string, error) {
 	return func() (string, string, error) {
 		cred, err := auth.GetCredential("openai")
 		if errors.Is(err, auth.ErrCredentialNotFound) {
-			return "", "", fmt.Errorf("no credentials for openai. Run: picoclaw auth login --provider openai")
+			return "", "", errors.New("no credentials for openai. Run: picoclaw auth login --provider openai")
 		}
 		if err != nil {
 			return "", "", fmt.Errorf("loading auth credentials: %w", err)

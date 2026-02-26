@@ -73,7 +73,7 @@ func (t *EditFileTool) Execute(ctx context.Context, args map[string]any) *ToolRe
 	if err := editFile(t.fs, path, oldText, newText); err != nil {
 		return ErrorResult(err.Error())
 	}
-	return SilentResult(fmt.Sprintf("File edited: %s", path))
+	return SilentResult("File edited: " + path)
 }
 
 type AppendFileTool struct {
@@ -129,7 +129,7 @@ func (t *AppendFileTool) Execute(ctx context.Context, args map[string]any) *Tool
 	if err := appendFile(t.fs, path, content); err != nil {
 		return ErrorResult(err.Error())
 	}
-	return SilentResult(fmt.Sprintf("Appended to %s", path))
+	return SilentResult("Appended to " + path)
 }
 
 // editFile reads the file via sysFs, performs the replacement, and writes back.
@@ -166,7 +166,7 @@ func replaceEditContent(content []byte, oldText, newText string) ([]byte, error)
 	contentStr := string(content)
 
 	if !strings.Contains(contentStr, oldText) {
-		return nil, fmt.Errorf("old_text not found in file. Make sure it matches exactly")
+		return nil, errors.New("old_text not found in file. Make sure it matches exactly")
 	}
 
 	count := strings.Count(contentStr, oldText)

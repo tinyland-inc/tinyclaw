@@ -152,6 +152,7 @@ func registerSharedTools(
 	}
 }
 
+//nolint:gocognit,nestif // main agent run loop: processes messages with context cancellation
 func (al *AgentLoop) Run(ctx context.Context) error {
 	al.running.Store(true)
 
@@ -443,7 +444,12 @@ func (al *AgentLoop) runAgentLoop(ctx context.Context, agent *AgentInstance, opt
 
 	// 7. Optional: summarization
 	if opts.EnableSummary {
-		al.maybeSummarize(agent, opts.SessionKey, opts.Channel, opts.ChatID)
+		al.maybeSummarize( //nolint:contextcheck // summarization goroutine uses its own timeout context
+			agent,
+			opts.SessionKey,
+			opts.Channel,
+			opts.ChatID,
+		)
 	}
 
 	// 8. Optional: send response via bus
@@ -457,7 +463,7 @@ func (al *AgentLoop) runAgentLoop(ctx context.Context, agent *AgentInstance, opt
 
 	// 9. Log response
 	responsePreview := utils.Truncate(finalContent, 120)
-	logger.InfoCF("agent", fmt.Sprintf("Response: %s", responsePreview),
+	logger.InfoCF("agent", "Response: "+responsePreview,
 		map[string]any{
 			"agent_id":     agent.ID,
 			"session_key":  opts.SessionKey,
@@ -469,6 +475,8 @@ func (al *AgentLoop) runAgentLoop(ctx context.Context, agent *AgentInstance, opt
 }
 
 // runLLMIteration executes the LLM call loop with tool handling.
+//
+//nolint:funlen,gocognit,gocyclo,maintidx // LLM iteration loop: handles streaming, tool calls, and retry logic
 func (al *AgentLoop) runLLMIteration(
 	ctx context.Context,
 	agent *AgentInstance,
@@ -1041,6 +1049,7 @@ func (al *AgentLoop) estimateTokens(messages []providers.Message) int {
 	return totalChars * 2 / 5
 }
 
+//nolint:funlen,gocognit,gocyclo // slash command dispatch: large switch over command names
 func (al *AgentLoop) handleCommand(_ context.Context, msg bus.InboundMessage) (string, bool) {
 	content := strings.TrimSpace(msg.Content)
 	if !strings.HasPrefix(content, "/") {
@@ -1066,14 +1075,14 @@ func (al *AgentLoop) handleCommand(_ context.Context, msg bus.InboundMessage) (s
 			if defaultAgent == nil {
 				return "No default agent configured", true
 			}
-			return fmt.Sprintf("Current model: %s", defaultAgent.Model), true
+			return "Current model: " + defaultAgent.Model, true
 		case "channel":
-			return fmt.Sprintf("Current channel: %s", msg.Channel), true
+			return "Current channel: " + msg.Channel, true
 		case "agents":
 			agentIDs := al.registry.ListAgentIDs()
-			return fmt.Sprintf("Registered agents: %s", strings.Join(agentIDs, ", ")), true
+			return "Registered agents: " + strings.Join(agentIDs, ", "), true
 		default:
-			return fmt.Sprintf("Unknown show target: %s", args[0]), true
+			return "Unknown show target: " + args[0], true
 		}
 
 	case "/list":
@@ -1091,12 +1100,12 @@ func (al *AgentLoop) handleCommand(_ context.Context, msg bus.InboundMessage) (s
 			if len(channels) == 0 {
 				return "No channels enabled", true
 			}
-			return fmt.Sprintf("Enabled channels: %s", strings.Join(channels, ", ")), true
+			return "Enabled channels: " + strings.Join(channels, ", "), true
 		case "agents":
 			agentIDs := al.registry.ListAgentIDs()
-			return fmt.Sprintf("Registered agents: %s", strings.Join(agentIDs, ", ")), true
+			return "Registered agents: " + strings.Join(agentIDs, ", "), true
 		default:
-			return fmt.Sprintf("Unknown list target: %s", args[0]), true
+			return "Unknown list target: " + args[0], true
 		}
 
 	case "/switch":
@@ -1122,9 +1131,9 @@ func (al *AgentLoop) handleCommand(_ context.Context, msg bus.InboundMessage) (s
 			if _, exists := al.channelManager.GetChannel(value); !exists && value != "cli" {
 				return fmt.Sprintf("Channel '%s' not found or not enabled", value), true
 			}
-			return fmt.Sprintf("Switched target channel to %s", value), true
+			return "Switched target channel to " + value, true
 		default:
-			return fmt.Sprintf("Unknown switch target: %s", target), true
+			return "Unknown switch target: " + target, true
 		}
 	}
 

@@ -81,7 +81,7 @@ func agentCmd(message, sessionKey, model string, debug bool) error {
 }
 
 func interactiveMode(agentLoop *agent.AgentLoop, sessionKey string) {
-	prompt := fmt.Sprintf("%s You: ", internal.Logo)
+	prompt := internal.Logo + " You: "
 
 	rl, err := readline.NewEx(&readline.Config{
 		Prompt:          prompt,

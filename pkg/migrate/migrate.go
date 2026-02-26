@@ -1,6 +1,7 @@
 package migrate
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -50,7 +51,7 @@ type Result struct {
 
 func Run(opts Options) (*Result, error) {
 	if opts.ConfigOnly && opts.WorkspaceOnly {
-		return nil, fmt.Errorf("--config-only and --workspace-only are mutually exclusive")
+		return nil, errors.New("--config-only and --workspace-only are mutually exclusive")
 	}
 
 	if opts.Refresh {
@@ -100,6 +101,7 @@ func Run(opts Options) (*Result, error) {
 	return result, nil
 }
 
+//nolint:nestif // migration planning: conditional action building with nested checks
 func Plan(opts Options, openclawHome, picoClawHome string) ([]Action, []string, error) {
 	var actions []Action
 	var warnings []string
@@ -147,6 +149,7 @@ func Plan(opts Options, openclawHome, picoClawHome string) ([]Action, []string, 
 	return actions, warnings, nil
 }
 
+//nolint:gocognit // executes migration actions: handles many action types with error accumulation
 func Execute(actions []Action, openclawHome, picoClawHome string) *Result {
 	result := &Result{}
 

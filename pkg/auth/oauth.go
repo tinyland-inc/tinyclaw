@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -94,7 +95,7 @@ func LoginBrowser(cfg OAuthProviderConfig) (*AuthCredential, error) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/auth/callback", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("state") != state {
-			resultCh <- callbackResult{err: fmt.Errorf("state mismatch")}
+			resultCh <- callbackResult{err: errors.New("state mismatch")}
 			http.Error(w, "State mismatch", http.StatusBadRequest)
 			return
 		}
@@ -156,7 +157,7 @@ func LoginBrowser(cfg OAuthProviderConfig) (*AuthCredential, error) {
 		return exchangeCodeForTokens(cfg, result.code, pkce.CodeVerifier, redirectURI)
 	case manualInput := <-manualCh:
 		if manualInput == "" {
-			return nil, fmt.Errorf("manual input canceled")
+			return nil, errors.New("manual input canceled")
 		}
 		// Extract code from URL if it's a full URL
 		code := manualInput
@@ -167,11 +168,11 @@ func LoginBrowser(cfg OAuthProviderConfig) (*AuthCredential, error) {
 			}
 		}
 		if code == "" {
-			return nil, fmt.Errorf("could not find authorization code in input")
+			return nil, errors.New("could not find authorization code in input")
 		}
 		return exchangeCodeForTokens(cfg, code, pkce.CodeVerifier, redirectURI)
 	case <-time.After(5 * time.Minute):
-		return nil, fmt.Errorf("authentication timed out after 5 minutes")
+		return nil, errors.New("authentication timed out after 5 minutes")
 	}
 }
 
@@ -276,7 +277,7 @@ func LoginDeviceCode(cfg OAuthProviderConfig) (*AuthCredential, error) {
 	for {
 		select {
 		case <-deadline:
-			return nil, fmt.Errorf("device code authentication timed out after 15 minutes")
+			return nil, errors.New("device code authentication timed out after 15 minutes")
 		case <-ticker.C:
 			cred, err := pollDeviceCode(cfg, deviceResp.DeviceAuthID, deviceResp.UserCode)
 			if err != nil {
@@ -309,7 +310,7 @@ func pollDeviceCode(cfg OAuthProviderConfig, deviceAuthID, userCode string) (*Au
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("pending")
+		return nil, errors.New("pending")
 	}
 
 	body, _ := io.ReadAll(resp.Body)
@@ -329,7 +330,7 @@ func pollDeviceCode(cfg OAuthProviderConfig, deviceAuthID, userCode string) (*Au
 
 func RefreshAccessToken(cred *AuthCredential, cfg OAuthProviderConfig) (*AuthCredential, error) {
 	if cred.RefreshToken == "" {
-		return nil, fmt.Errorf("no refresh token available")
+		return nil, errors.New("no refresh token available")
 	}
 
 	data := url.Values{
@@ -465,7 +466,7 @@ func parseTokenResponse(body []byte, provider string) (*AuthCredential, error) {
 	}
 
 	if tokenResp.AccessToken == "" {
-		return nil, fmt.Errorf("no access token in response")
+		return nil, errors.New("no access token in response")
 	}
 
 	var expiresAt time.Time
@@ -529,7 +530,7 @@ func extractAccountID(token string) string {
 func parseJWTClaims(token string) (map[string]any, error) {
 	parts := strings.Split(token, ".")
 	if len(parts) < 2 {
-		return nil, fmt.Errorf("token is not a JWT")
+		return nil, errors.New("token is not a JWT")
 	}
 
 	payload := parts[1]

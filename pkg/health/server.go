@@ -75,6 +75,7 @@ func (s *Server) StartContext(ctx context.Context) error {
 	case err := <-errCh:
 		return err
 	case <-ctx.Done():
+		//nolint:contextcheck // parent ctx is done; fresh context needed for shutdown grace
 		return s.server.Shutdown(context.Background())
 	}
 }

@@ -2,8 +2,10 @@ package channels
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -114,12 +116,12 @@ func (c *DiscordChannel) Send(ctx context.Context, msg bus.OutboundMessage) erro
 	c.stopTyping(msg.ChatID)
 
 	if !c.IsRunning() {
-		return fmt.Errorf("discord bot not running")
+		return errors.New("discord bot not running")
 	}
 
 	channelID := msg.ChatID
 	if channelID == "" {
-		return fmt.Errorf("channel ID is empty")
+		return errors.New("channel ID is empty")
 	}
 
 	runes := []rune(msg.Content)
@@ -168,6 +170,7 @@ func appendContent(content, suffix string) string {
 	return content + "\n" + suffix
 }
 
+//nolint:funlen,gocognit,gocyclo,nestif // message handler: many attachment/embed/mention cases
 func (c *DiscordChannel) handleMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m == nil || m.Author == nil {
 		return
@@ -301,7 +304,7 @@ func (c *DiscordChannel) handleMessage(s *discordgo.Session, m *discordgo.Messag
 		"display_name": senderName,
 		"guild_id":     m.GuildID,
 		"channel_id":   m.ChannelID,
-		"is_dm":        fmt.Sprintf("%t", m.GuildID == ""),
+		"is_dm":        strconv.FormatBool(m.GuildID == ""),
 		"peer_kind":    peerKind,
 		"peer_id":      peerID,
 	}
