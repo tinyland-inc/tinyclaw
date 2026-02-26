@@ -129,18 +129,28 @@ go-update-deps:
 
 # Type-check and verify all F* modules
 fstar-check:
-    @echo "F* verification not yet implemented (Sprint 2)"
-    @exit 1
+    @echo "Checking F* modules..."
+    @for f in fstar/src/*.fst; do \
+        echo "  Verifying $$f..."; \
+        fstar.exe --include fstar/src "$$f" || exit 1; \
+    done
+    @echo "F* verification passed"
 
 # Extract F* to OCaml
 fstar-extract:
-    @echo "F* extraction not yet implemented (Sprint 2)"
-    @exit 1
+    @echo "Extracting F* to OCaml..."
+    @mkdir -p fstar/extracted/lib
+    @for f in fstar/src/*.fst; do \
+        fstar.exe --include fstar/src --codegen OCaml \
+            --extract_module "$$(basename "$$f" .fst)" \
+            --odir fstar/extracted/lib "$$f" || exit 1; \
+    done
+    @echo "F* extraction complete"
 
 # Build extracted OCaml binary
 fstar-build: fstar-extract
-    @echo "F* build not yet implemented (Sprint 2)"
-    @exit 1
+    cd fstar/extracted && dune build
+    @echo "OCaml core binary built: fstar/extracted/_build/default/bin/main.exe"
 
 # ─── Futhark Compute Kernels (Sprint 3+) ───────────────────────────────────────
 
