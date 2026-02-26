@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/sipeed/picoclaw/pkg/config"
+	anthropicprovider "github.com/sipeed/picoclaw/pkg/providers/anthropic"
 )
 
 // createClaudeAuthProvider creates a Claude provider using OAuth credentials from auth store.
@@ -108,15 +109,12 @@ func CreateProviderFromConfig(cfg *config.ModelConfig) (LLMProvider, string, err
 			}
 			return provider, modelID, nil
 		}
-		// Use API key with HTTP API
-		apiBase := cfg.APIBase
-		if apiBase == "" {
-			apiBase = "https://api.anthropic.com/v1"
-		}
+		// Use native Anthropic SDK with API key (calls /v1/messages directly).
+		// This avoids requiring an OpenAI-compatible proxy for Anthropic models.
 		if cfg.APIKey == "" {
 			return nil, "", fmt.Errorf("api_key is required for anthropic protocol (model: %s)", cfg.Model)
 		}
-		return NewHTTPProviderWithMaxTokensField(cfg.APIKey, apiBase, cfg.Proxy, cfg.MaxTokensField), modelID, nil
+		return anthropicprovider.NewProviderWithBaseURL(cfg.APIKey, cfg.APIBase), modelID, nil
 
 	case "antigravity":
 		return NewAntigravityProvider(), modelID, nil
