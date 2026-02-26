@@ -8,7 +8,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/sipeed/picoclaw/pkg/config"
+	"github.com/tinyland-inc/picoclaw/pkg/config"
 )
 
 var supportedProviders = map[string]bool{

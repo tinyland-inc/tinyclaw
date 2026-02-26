@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sipeed/picoclaw/pkg/providers/protocoltypes"
+	"github.com/tinyland-inc/picoclaw/pkg/providers/protocoltypes"
 )
 
 type (

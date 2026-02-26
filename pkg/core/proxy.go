@@ -18,7 +18,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/sipeed/picoclaw/pkg/logger"
+	"github.com/tinyland-inc/picoclaw/pkg/logger"
 )
 
 // CoreProxy manages the lifecycle of the F*-extracted core binary

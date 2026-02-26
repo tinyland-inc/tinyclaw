@@ -6,7 +6,7 @@
 binary_name := "picoclaw"
 build_dir := "build"
 cmd_dir := "cmd/" + binary_name
-internal := "github.com/sipeed/picoclaw/cmd/picoclaw/internal"
+internal := "github.com/tinyland-inc/picoclaw/cmd/picoclaw/internal"
 
 install_prefix := env("INSTALL_PREFIX", env("HOME", "") + "/.local")
 install_bin := install_prefix + "/bin"

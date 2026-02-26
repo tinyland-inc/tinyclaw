@@ -498,7 +498,7 @@ module AgentLoop = struct
     let outcome = classify_response response new_state fuel in
     (outcome, log1)
 
-  let init_loop (route : Routing.resolved_route) sess user_content request_id timestamp =
+  let init_loop (route : Types.resolved_route) sess user_content request_id timestamp =
     let user_msg = {
       msg_role = User;
       msg_content = user_content;

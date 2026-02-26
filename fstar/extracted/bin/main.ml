@@ -15,7 +15,9 @@
     - Gateway -> Core: execute_tool result (tool output)
     - Core -> Gateway: process_message result (final response + audit log) *)
 
+open Picoclaw_lib
 open Picoclaw_core
+open AgentLoop
 
 (** ─── Session Store ─────────────────────────────────────────────── *)
 
@@ -159,7 +161,7 @@ let process_message (params : Json_codec.process_message_params) : Yojson.Basic.
         let authorized = AgentLoop.filter_authorized decisions in
         let denied = AgentLoop.filter_denied decisions in
         (* Log denied calls *)
-        let log_with_denied = List.fold_left (fun acc (tc, reason) ->
+        let log_with_denied = List.fold_left (fun acc (tc, _reason) ->
           AuditLog.log_tool_auth acc (now ()) tc.Types.tc_name false
             tool_state.ls_agent_id tool_state.ls_session.Session.s_key
             tool_state.ls_request_id

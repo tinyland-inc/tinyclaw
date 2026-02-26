@@ -139,7 +139,7 @@ let process_message_params_of_json j =
 let json_of_match_reason r =
   `String (Types.match_reason_to_string r)
 
-let json_of_resolved_route (r : Routing.resolved_route) =
+let json_of_resolved_route (r : Types.resolved_route) =
   `Assoc [
     "agent_id", `String r.rr_agent_id;
     "channel", `String r.rr_channel;

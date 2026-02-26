@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sipeed/picoclaw/cmd/picoclaw/internal"
-	"github.com/sipeed/picoclaw/pkg/auth"
-	"github.com/sipeed/picoclaw/pkg/config"
-	"github.com/sipeed/picoclaw/pkg/providers"
+	"github.com/tinyland-inc/picoclaw/cmd/picoclaw/internal"
+	"github.com/tinyland-inc/picoclaw/pkg/auth"
+	"github.com/tinyland-inc/picoclaw/pkg/config"
+	"github.com/tinyland-inc/picoclaw/pkg/providers"
 )
 
 const supportedProvidersMsg = "supported providers: openai, anthropic, google-antigravity"

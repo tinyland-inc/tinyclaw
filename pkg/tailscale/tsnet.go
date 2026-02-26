@@ -15,13 +15,13 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/sipeed/picoclaw/pkg/logger"
+	"github.com/tinyland-inc/picoclaw/pkg/logger"
 )
 
 // Config holds Tailscale tsnet configuration.
 type Config struct {
 	Enabled  bool   `json:"enabled"`
-	Hostname string `json:"hostname"` // Tailscale node name (default: picoclaw-gateway)
+	Hostname string `json:"hostname"`  // Tailscale node name (default: picoclaw-gateway)
 	StateDir string `json:"state_dir"` // Directory for tsnet state (default: ~/.picoclaw/tsnet)
 	AuthKey  string `json:"auth_key"`  // Optional pre-auth key for headless setup
 }

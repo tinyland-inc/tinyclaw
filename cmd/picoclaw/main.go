@@ -12,16 +12,16 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sipeed/picoclaw/cmd/picoclaw/internal"
-	"github.com/sipeed/picoclaw/cmd/picoclaw/internal/agent"
-	"github.com/sipeed/picoclaw/cmd/picoclaw/internal/auth"
-	"github.com/sipeed/picoclaw/cmd/picoclaw/internal/cron"
-	"github.com/sipeed/picoclaw/cmd/picoclaw/internal/gateway"
-	"github.com/sipeed/picoclaw/cmd/picoclaw/internal/migrate"
-	"github.com/sipeed/picoclaw/cmd/picoclaw/internal/onboard"
-	"github.com/sipeed/picoclaw/cmd/picoclaw/internal/skills"
-	"github.com/sipeed/picoclaw/cmd/picoclaw/internal/status"
-	"github.com/sipeed/picoclaw/cmd/picoclaw/internal/version"
+	"github.com/tinyland-inc/picoclaw/cmd/picoclaw/internal"
+	"github.com/tinyland-inc/picoclaw/cmd/picoclaw/internal/agent"
+	"github.com/tinyland-inc/picoclaw/cmd/picoclaw/internal/auth"
+	"github.com/tinyland-inc/picoclaw/cmd/picoclaw/internal/cron"
+	"github.com/tinyland-inc/picoclaw/cmd/picoclaw/internal/gateway"
+	"github.com/tinyland-inc/picoclaw/cmd/picoclaw/internal/migrate"
+	"github.com/tinyland-inc/picoclaw/cmd/picoclaw/internal/onboard"
+	"github.com/tinyland-inc/picoclaw/cmd/picoclaw/internal/skills"
+	"github.com/tinyland-inc/picoclaw/cmd/picoclaw/internal/status"
+	"github.com/tinyland-inc/picoclaw/cmd/picoclaw/internal/version"
 )
 
 func NewPicoclawCommand() *cobra.Command {

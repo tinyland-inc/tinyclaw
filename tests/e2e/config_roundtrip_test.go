@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/sipeed/picoclaw/pkg/config"
-	"github.com/sipeed/picoclaw/pkg/migrate"
+	"github.com/tinyland-inc/picoclaw/pkg/config"
+	"github.com/tinyland-inc/picoclaw/pkg/migrate"
 )
 
 // TestConfigRoundtrip verifies that JSON -> Dhall -> JSON produces equivalent output.
@@ -17,6 +17,10 @@ func TestConfigRoundtrip(t *testing.T) {
 	if _, err := exec.LookPath("dhall-to-json"); err != nil {
 		t.Skip("dhall-to-json not installed, skipping roundtrip test")
 	}
+
+	// The migration redacts API keys to env:PICOCLAW_API_KEY references;
+	// set it so dhall-to-json can resolve it.
+	t.Setenv("PICOCLAW_API_KEY", "test-key")
 
 	tmpDir := t.TempDir()
 

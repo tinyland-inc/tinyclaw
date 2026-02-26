@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/sipeed/picoclaw/pkg/config"
+	"github.com/tinyland-inc/picoclaw/pkg/config"
 )
 
 // ToDhallOptions controls JSON-to-Dhall config migration.
@@ -80,7 +80,9 @@ func configToDhall(cfg *config.Config, result *ToDhallResult) string {
 
 	b.WriteString("-- PicoClaw configuration (generated from JSON)\n")
 	b.WriteString("-- Edit this file to manage your configuration as typed Dhall.\n\n")
-	b.WriteString("let Types = https://raw.githubusercontent.com/tinyland-inc/picoclaw/main/dhall/types/package.dhall\n")
+	b.WriteString(
+		"let Types = https://raw.githubusercontent.com/tinyland-inc/picoclaw/main/dhall/types/package.dhall\n",
+	)
 	b.WriteString("let H = https://raw.githubusercontent.com/tinyland-inc/picoclaw/main/dhall/helpers.dhall\n\n")
 
 	b.WriteString("let emptyStrings = [] : List Text\n\n")
@@ -329,9 +331,9 @@ func renderModelList(b *strings.Builder, models []config.ModelConfig, indent str
 
 func renderModelConfig(b *strings.Builder, mc *config.ModelConfig, indent string) {
 	// Use helpers for standard entries, redact credentials
-	apiBase := "None Text"
+	apiBase := "(None Text)"
 	if mc.APIBase != "" {
-		apiBase = fmt.Sprintf("Some %s", dhallText(mc.APIBase))
+		apiBase = fmt.Sprintf("(Some %s)", dhallText(mc.APIBase))
 	}
 
 	// Redact API keys in output

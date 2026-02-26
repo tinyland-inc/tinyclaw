@@ -4,7 +4,7 @@ on:
   pull_request: { }
 
 env:
-  DHALL_VERSION: "1.42.1"
+  DHALL_VERSION: "1.42.2"
   DHALL_JSON_VERSION: "1.7.12"
 
 jobs:
@@ -17,8 +17,8 @@ jobs:
 
       - name: Install Dhall
         run: |
-          curl -sSL "https://github.com/dhall-lang/dhall-haskell/releases/download/${DHALL_VERSION}/dhall-${DHALL_VERSION}-x86_64-linux.tar.bz2" | tar xj -C /usr/local
-          curl -sSL "https://github.com/dhall-lang/dhall-haskell/releases/download/${DHALL_VERSION}/dhall-json-${DHALL_JSON_VERSION}-x86_64-linux.tar.bz2" | tar xj -C /usr/local
+          curl -sSL "https://github.com/dhall-lang/dhall-haskell/releases/download/${DHALL_VERSION}/dhall-${DHALL_VERSION}-x86_64-linux.tar.bz2" | sudo tar xj -C /usr/local
+          curl -sSL "https://github.com/dhall-lang/dhall-haskell/releases/download/${DHALL_VERSION}/dhall-json-${DHALL_JSON_VERSION}-x86_64-linux.tar.bz2" | sudo tar xj -C /usr/local
 
       - name: Type-check Dhall files
         run: find dhall -name '*.dhall' -exec dhall type --file {} \; > /dev/null
@@ -85,8 +85,8 @@ jobs:
 
       - name: Install Dhall
         run: |
-          curl -sSL "https://github.com/dhall-lang/dhall-haskell/releases/download/${DHALL_VERSION}/dhall-${DHALL_VERSION}-x86_64-linux.tar.bz2" | tar xj -C /usr/local
-          curl -sSL "https://github.com/dhall-lang/dhall-haskell/releases/download/${DHALL_VERSION}/dhall-json-${DHALL_JSON_VERSION}-x86_64-linux.tar.bz2" | tar xj -C /usr/local
+          curl -sSL "https://github.com/dhall-lang/dhall-haskell/releases/download/${DHALL_VERSION}/dhall-${DHALL_VERSION}-x86_64-linux.tar.bz2" | sudo tar xj -C /usr/local
+          curl -sSL "https://github.com/dhall-lang/dhall-haskell/releases/download/${DHALL_VERSION}/dhall-json-${DHALL_JSON_VERSION}-x86_64-linux.tar.bz2" | sudo tar xj -C /usr/local
 
       - name: Run go generate
         run: go generate ./...
@@ -126,7 +126,7 @@ jobs:
           CGO_ENABLED: 0
         run: |
           go build -v -tags stdjson \
-            -ldflags "-X github.com/sipeed/picoclaw/cmd/picoclaw/internal.version=$(git describe --tags --always --dirty 2>/dev/null || echo dev) -s -w" \
+            -ldflags "-X github.com/tinyland-inc/picoclaw/cmd/picoclaw/internal.version=$(git describe --tags --always --dirty 2>/dev/null || echo dev) -s -w" \
             -o build/picoclaw-${{ matrix.goos }}-${{ matrix.goarch }} \
             ./cmd/picoclaw
 

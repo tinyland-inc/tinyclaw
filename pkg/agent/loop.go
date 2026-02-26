@@ -16,17 +16,17 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/sipeed/picoclaw/pkg/bus"
-	"github.com/sipeed/picoclaw/pkg/channels"
-	"github.com/sipeed/picoclaw/pkg/config"
-	"github.com/sipeed/picoclaw/pkg/constants"
-	"github.com/sipeed/picoclaw/pkg/logger"
-	"github.com/sipeed/picoclaw/pkg/providers"
-	"github.com/sipeed/picoclaw/pkg/routing"
-	"github.com/sipeed/picoclaw/pkg/skills"
-	"github.com/sipeed/picoclaw/pkg/state"
-	"github.com/sipeed/picoclaw/pkg/tools"
-	"github.com/sipeed/picoclaw/pkg/utils"
+	"github.com/tinyland-inc/picoclaw/pkg/bus"
+	"github.com/tinyland-inc/picoclaw/pkg/channels"
+	"github.com/tinyland-inc/picoclaw/pkg/config"
+	"github.com/tinyland-inc/picoclaw/pkg/constants"
+	"github.com/tinyland-inc/picoclaw/pkg/logger"
+	"github.com/tinyland-inc/picoclaw/pkg/providers"
+	"github.com/tinyland-inc/picoclaw/pkg/routing"
+	"github.com/tinyland-inc/picoclaw/pkg/skills"
+	"github.com/tinyland-inc/picoclaw/pkg/state"
+	"github.com/tinyland-inc/picoclaw/pkg/tools"
+	"github.com/tinyland-inc/picoclaw/pkg/utils"
 )
 
 type AgentLoop struct {

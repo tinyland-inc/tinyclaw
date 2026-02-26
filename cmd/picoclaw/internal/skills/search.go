@@ -3,7 +3,7 @@ package skills
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/sipeed/picoclaw/pkg/skills"
+	"github.com/tinyland-inc/picoclaw/pkg/skills"
 )
 
 func newSearchCommand(installerFn func() (*skills.SkillInstaller, error)) *cobra.Command {

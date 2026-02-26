@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/sipeed/picoclaw/pkg/config"
-	"github.com/sipeed/picoclaw/pkg/providers"
+	"github.com/tinyland-inc/picoclaw/pkg/config"
+	"github.com/tinyland-inc/picoclaw/pkg/providers"
 )
 
 type mockRegistryProvider struct{}

@@ -266,7 +266,8 @@ func TestProvider_ChatUsesTokenSource(t *testing.T) {
 // loop (loop.go) builds assistant messages with Function.Arguments (string)
 // populated but Arguments (map) nil. Before the fix, buildParams would
 // marshal nil → "null" and the API would reject with 400:
-//   "tool_use.input: Input should be a valid dictionary"
+//
+//	"tool_use.input: Input should be a valid dictionary"
 func TestBuildParams_ToolCallFromAgentLoop(t *testing.T) {
 	messages := []Message{
 		{Role: "user", Content: "run date"},

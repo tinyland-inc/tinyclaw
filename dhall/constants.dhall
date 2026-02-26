@@ -6,6 +6,10 @@ let Channel = Types.Channel
 let Tool = Types.Tool
 let H = ./helpers.dhall
 
+let ToolAuth = ./policy/tool-auth.dhall
+let Routing = ./policy/routing.dhall
+let AperturePolicy = ./policy/aperture.dhall
+
 let emptyStrings = [] : List Text
 
 let defaults
@@ -175,6 +179,11 @@ let defaults
         , webhook_url = ""
         , webhook_key{- -} = ""
         , cerbos_url = ""
+        }
+      , policy =
+        { tool_auth = ToolAuth.defaultPolicy
+        , routing = Routing.cascade
+        , aperture_rules = [] : List AperturePolicy.ApertureRule
         }
       }
 

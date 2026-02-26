@@ -5,12 +5,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/sipeed/picoclaw/pkg/bus"
-	"github.com/sipeed/picoclaw/pkg/constants"
-	"github.com/sipeed/picoclaw/pkg/devices/events"
-	"github.com/sipeed/picoclaw/pkg/devices/sources"
-	"github.com/sipeed/picoclaw/pkg/logger"
-	"github.com/sipeed/picoclaw/pkg/state"
+	"github.com/tinyland-inc/picoclaw/pkg/bus"
+	"github.com/tinyland-inc/picoclaw/pkg/constants"
+	"github.com/tinyland-inc/picoclaw/pkg/devices/events"
+	"github.com/tinyland-inc/picoclaw/pkg/devices/sources"
+	"github.com/tinyland-inc/picoclaw/pkg/logger"
+	"github.com/tinyland-inc/picoclaw/pkg/state"
 )
 
 type Service struct {

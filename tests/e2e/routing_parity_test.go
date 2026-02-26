@@ -3,7 +3,7 @@ package e2e
 import (
 	"testing"
 
-	"github.com/sipeed/picoclaw/pkg/config"
+	"github.com/tinyland-inc/picoclaw/pkg/config"
 )
 
 // TestRoutingParity verifies that the Go routing logic produces consistent results

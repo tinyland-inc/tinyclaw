@@ -13,9 +13,9 @@ import (
 	"github.com/tencent-connect/botgo/token"
 	"golang.org/x/oauth2"
 
-	"github.com/sipeed/picoclaw/pkg/bus"
-	"github.com/sipeed/picoclaw/pkg/config"
-	"github.com/sipeed/picoclaw/pkg/logger"
+	"github.com/tinyland-inc/picoclaw/pkg/bus"
+	"github.com/tinyland-inc/picoclaw/pkg/config"
+	"github.com/tinyland-inc/picoclaw/pkg/logger"
 )
 
 type QQChannel struct {

@@ -25,7 +25,7 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 go generate ./... && \
     CGO_ENABLED=0 go build -v -tags stdjson \
-      -ldflags "-X github.com/sipeed/picoclaw/cmd/picoclaw/internal.version=$(git describe --tags --always --dirty 2>/dev/null || echo dev) -s -w" \
+      -ldflags "-X github.com/tinyland-inc/picoclaw/cmd/picoclaw/internal.version=$(git describe --tags --always --dirty 2>/dev/null || echo dev) -s -w" \
       -o build/picoclaw ./cmd/picoclaw
 
 # ============================================================

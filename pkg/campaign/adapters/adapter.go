@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sipeed/picoclaw/pkg/campaign"
+	"github.com/tinyland-inc/picoclaw/pkg/campaign"
 )
 
 // PicoClawAdapter dispatches campaign steps to the local PicoClaw agent loop.
@@ -52,10 +52,3 @@ func (a *StubAdapter) Execute(_ context.Context, agentID, prompt string, _ []str
 func (a *StubAdapter) Name() string { return a.BackendName }
 
 var _ campaign.BackendAdapter = (*StubAdapter)(nil)
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}

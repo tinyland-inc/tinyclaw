@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/sipeed/picoclaw/pkg/providers"
+	"github.com/tinyland-inc/picoclaw/pkg/providers"
 )
 
 // --- mock types ---

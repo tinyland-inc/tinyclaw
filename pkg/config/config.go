@@ -1,7 +1,9 @@
 package config
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -525,14 +527,19 @@ type ClawHubRegistryConfig struct {
 // and parsing the resulting JSON. Returns nil, nil if dhall-to-json is not available.
 func LoadDhallConfig(path string) (*Config, error) {
 	dhallBin, err := exec.LookPath("dhall-to-json")
-	if err != nil {
+	if errors.Is(err, exec.ErrNotFound) {
 		return nil, nil // dhall-to-json not installed, caller should fall back
+	}
+	if err != nil {
+		return nil, fmt.Errorf("dhall-to-json lookup: %w", err)
 	}
 
 	cmd := exec.Command(dhallBin, "--file", path)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
 	out, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("dhall-to-json failed for %s: %w", path, err)
+		return nil, fmt.Errorf("dhall-to-json failed for %s: %w\n%s", path, err, stderr.String())
 	}
 
 	cfg := DefaultConfig()

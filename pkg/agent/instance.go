@@ -5,11 +5,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/sipeed/picoclaw/pkg/config"
-	"github.com/sipeed/picoclaw/pkg/providers"
-	"github.com/sipeed/picoclaw/pkg/routing"
-	"github.com/sipeed/picoclaw/pkg/session"
-	"github.com/sipeed/picoclaw/pkg/tools"
+	"github.com/tinyland-inc/picoclaw/pkg/config"
+	"github.com/tinyland-inc/picoclaw/pkg/providers"
+	"github.com/tinyland-inc/picoclaw/pkg/routing"
+	"github.com/tinyland-inc/picoclaw/pkg/session"
+	"github.com/tinyland-inc/picoclaw/pkg/tools"
 )
 
 // AgentInstance represents a fully configured agent with its own workspace,

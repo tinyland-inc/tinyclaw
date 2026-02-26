@@ -27,7 +27,7 @@ linters:
     - wsl
     - wsl_v5
 
-    # Disabled: need incremental enablement
+    # Disabled: need codebase-wide fixes before enabling
     - contextcheck
     - embeddedstructfieldcheck
     - errcheck

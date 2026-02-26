@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sipeed/picoclaw/pkg/migrate"
+	"github.com/tinyland-inc/picoclaw/pkg/migrate"
 )
 
 func NewMigrateCommand() *cobra.Command {

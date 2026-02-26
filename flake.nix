@@ -17,8 +17,8 @@
           else "dev";
 
         ldflags = [
-          "-X github.com/sipeed/picoclaw/cmd/picoclaw/internal.version=${version}"
-          "-X github.com/sipeed/picoclaw/cmd/picoclaw/internal.gitCommit=${version}"
+          "-X github.com/tinyland-inc/picoclaw/cmd/picoclaw/internal.version=${version}"
+          "-X github.com/tinyland-inc/picoclaw/cmd/picoclaw/internal.gitCommit=${version}"
           "-s" "-w"
         ];
       in
