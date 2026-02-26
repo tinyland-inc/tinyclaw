@@ -1,7 +1,7 @@
 -- Routing policy definitions
 -- Defines the cascade order for agent resolution.
 --
--- The 7-level routing cascade (to be verified in F* during Sprint 2):
+-- The 7-level routing cascade (verified in fstar/src/PicoClaw.Routing.fst):
 --   1. Explicit binding match (channel + account_id + peer)
 --   2. Channel + guild/team match
 --   3. Channel + account_id match

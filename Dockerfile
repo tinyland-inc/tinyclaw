@@ -13,7 +13,7 @@
 # ============================================================
 FROM golang:1.25-alpine AS builder
 
-RUN apk add --no-cache git make
+RUN apk add --no-cache git
 
 WORKDIR /src
 
@@ -23,7 +23,10 @@ RUN go mod download
 
 # Copy source and build
 COPY . .
-RUN make build
+RUN CGO_ENABLED=0 go generate ./... && \
+    CGO_ENABLED=0 go build -v -tags stdjson \
+      -ldflags "-X github.com/sipeed/picoclaw/cmd/picoclaw/internal.version=$(git describe --tags --always --dirty 2>/dev/null || echo dev) -s -w" \
+      -o build/picoclaw ./cmd/picoclaw
 
 # ============================================================
 # Stage 2: Minimal runtime image

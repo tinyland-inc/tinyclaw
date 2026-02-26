@@ -57,33 +57,34 @@ For substantial new features, please open an issue first to discuss the design b
 ### Prerequisites
 
 - Go 1.25 or later
-- `make`
+- [`just`](https://github.com/casey/just) (task runner)
+- Optional: [Nix](https://nixos.org/) for reproducible dev shell (`nix develop`)
 
 ### Build
 
 ```bash
-make build       # Build binary (runs go generate first)
-make generate    # Run go generate only
-make check       # Full pre-commit check: deps + fmt + vet + test
+just go-build    # Build binary (runs go generate first)
+just go-generate # Run go generate only
+just check       # Full pre-commit check: dhall + go + fstar
 ```
 
 ### Running Tests
 
 ```bash
-make test                                    # Run all tests
+just go-test                                 # Run all tests
 go test -run TestName -v ./pkg/session/      # Run a single test
-go test -bench=. -benchmem -run='^$' ./...  # Run benchmarks
+go test -bench=. -benchmem -run='^$' ./...   # Run benchmarks
 ```
 
 ### Code Style
 
 ```bash
-make fmt   # Format code
-make vet   # Static analysis
-make lint  # Full linter run
+just go-fmt    # Format code
+just go-vet    # Static analysis
+just go-lint   # Full linter run
 ```
 
-All CI checks must pass before a PR can be merged. Run `make check` locally before pushing to catch issues early.
+All CI checks must pass before a PR can be merged. Run `just check` locally before pushing to catch issues early.
 
 ---
 
@@ -152,7 +153,7 @@ PRs where it is clear the contributor has not read or tested the AI-generated co
 
 AI-generated contributions are held to the **same quality bar** as human-written code:
 
-- It must pass all CI checks (`make check`).
+- It must pass all CI checks (`just check`).
 - It must be idiomatic Go and consistent with the existing codebase style.
 - It must not introduce unnecessary abstractions, dead code, or over-engineering.
 - It must include or update tests where appropriate.
@@ -174,7 +175,7 @@ If you are unsure whether a piece of AI-generated code is safe, say so in the PR
 
 ### Before Opening a PR
 
-- [ ] Run `make check` and ensure it passes locally.
+- [ ] Run `just check` and ensure it passes locally.
 - [ ] Fill in the PR template completely, including the AI disclosure section.
 - [ ] Link any related issue(s) in the PR description.
 - [ ] Keep the PR focused. Avoid bundling unrelated changes together.

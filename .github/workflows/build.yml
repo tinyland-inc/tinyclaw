@@ -6,7 +6,22 @@ on:
 
 jobs:
   build:
+    name: Build All Platforms
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: linux
+            goarch: riscv64
+          - goos: darwin
+            goarch: arm64
+          - goos: windows
+            goarch: amd64
+            ext: .exe
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -16,5 +31,22 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Run go generate
+        run: go generate ./...
+
       - name: Build
-        run: make build-all
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          go build -v -tags stdjson \
+            -ldflags "-X github.com/sipeed/picoclaw/cmd/picoclaw/internal.version=$(git describe --tags --always --dirty 2>/dev/null || echo dev) -s -w" \
+            -o build/picoclaw-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.ext }} \
+            ./cmd/picoclaw
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: picoclaw-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: build/picoclaw-*
