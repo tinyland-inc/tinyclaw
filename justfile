@@ -224,6 +224,12 @@ nix-bundle:
     nix build .#picoclaw-bundle
     @echo "Bundle built: result/"
 
+# ─── Campaign ──────────────────────────────────────────────────────────────────
+
+# Run campaign tests
+campaign-test:
+    {{go}} test ./pkg/campaign/... -v
+
 # ─── Aperture / Tailscale ──────────────────────────────────────────────────────
 
 # Run Aperture integration tests
