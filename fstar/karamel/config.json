@@ -1,0 +1,63 @@
+{
+  "description": "KaRaMeL extraction configuration for PicoClaw verified core",
+  "version": "1.0.0",
+  "extraction": {
+    "target": "C",
+    "modules": [
+      "PicoClaw.Types",
+      "PicoClaw.Routing",
+      "PicoClaw.ToolAuth",
+      "PicoClaw.Session",
+      "PicoClaw.AuditLog",
+      "PicoClaw.AgentLoop",
+      "PicoClaw.Protocol",
+      "PicoClaw.Campaign",
+      "PicoClaw.Network",
+      "PicoClaw.Tailscale"
+    ],
+    "exclude_modules": [
+      "PicoClaw.Proof"
+    ],
+    "output_dir": "../extracted/c",
+    "options": {
+      "add_include": [
+        "\"picoclaw_ffi.h\""
+      ],
+      "no_prefix": [
+        "PicoClaw.Types",
+        "PicoClaw.Routing"
+      ],
+      "library": [
+        "FStar.String",
+        "FStar.List.Tot"
+      ],
+      "bundle": [
+        "PicoClaw.*"
+      ],
+      "warn_error": "+1-2+3",
+      "header": "/* PicoClaw Verified Core - extracted from F* via KaRaMeL */\n/* DO NOT EDIT - regenerate with: just fstar-extract-c */",
+      "skip_compilation": false,
+      "skip_linking": true,
+      "minimal": true
+    }
+  },
+  "futhark_link": {
+    "description": "Link Futhark C backend for parallel kernels",
+    "c_sources": [
+      "../../futhark/build/similarity.c",
+      "../../futhark/build/audit_analysis.c",
+      "../../futhark/build/token_estimate.c"
+    ],
+    "c_headers": [
+      "../../futhark/build/similarity.h",
+      "../../futhark/build/audit_analysis.h",
+      "../../futhark/build/token_estimate.h"
+    ]
+  },
+  "build": {
+    "cc": "cc",
+    "cflags": ["-O2", "-Wall", "-Wextra", "-std=c11"],
+    "ldflags": ["-lm", "-lpthread"],
+    "output": "picoclaw-verified"
+  }
+}

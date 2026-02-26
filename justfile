@@ -44,8 +44,8 @@ build: dhall-render go-build
 # Run all tests (unit + e2e)
 test: go-test e2e-test
 
-# Verified build: dhall check + go build (+ fstar-check + futhark-test in future)
-verified-build: dhall-check build
+# Verified build: dhall check + go build + fstar check + futhark test
+verified-build: dhall-check build fstar-check fstar-build
 
 # ─── Dhall Config ───────────────────────────────────────────────────────────────
 
@@ -175,6 +175,50 @@ fstar-extract:
 fstar-build: fstar-extract
     cd fstar/extracted && dune build
     @echo "OCaml core binary built: fstar/extracted/_build/default/bin/main.exe"
+
+# Build OCaml binary without F* extraction (uses hand-written OCaml)
+fstar-build-ocaml:
+    cd fstar/extracted && dune build
+    @echo "OCaml core binary built: fstar/extracted/_build/default/bin/main.exe"
+
+# Extract F* to C via KaRaMeL
+fstar-extract-c:
+    @echo "Extracting F* to C via KaRaMeL..."
+    @mkdir -p fstar/extracted/c
+    krml --skip_compilation \
+        -bundle PicoClaw.* \
+        -add-include '"picoclaw_ffi.h"' \
+        -tmpdir fstar/extracted/c \
+        fstar/src/PicoClaw.Types.fst \
+        fstar/src/PicoClaw.Routing.fst \
+        fstar/src/PicoClaw.ToolAuth.fst \
+        fstar/src/PicoClaw.Session.fst \
+        fstar/src/PicoClaw.AuditLog.fst \
+        fstar/src/PicoClaw.AgentLoop.fst \
+        fstar/src/PicoClaw.Protocol.fst \
+        fstar/src/PicoClaw.Campaign.fst \
+        fstar/src/PicoClaw.Network.fst \
+        fstar/src/PicoClaw.Tailscale.fst
+    @echo "C extraction complete: fstar/extracted/c/"
+
+# Build verified C binary (KaRaMeL extraction + Futhark C kernels)
+fstar-build-verified: fstar-extract-c futhark-build
+    @echo "Building verified C binary..."
+    @mkdir -p {{build_dir}}
+    cc -O2 -Wall -std=c11 \
+        -I fstar/extracted/c \
+        -I futhark/build \
+        fstar/extracted/c/*.c \
+        futhark/build/*.c \
+        -lm -lpthread \
+        -o {{build_dir}}/picoclaw-verified
+    @echo "Verified binary: {{build_dir}}/picoclaw-verified"
+
+# Verify F* security proofs (PicoClaw.Proof module)
+fstar-proof:
+    @echo "Verifying security proofs..."
+    fstar.exe --include fstar/src fstar/src/PicoClaw.Proof.fst
+    @echo "All security proofs verified"
 
 # ─── Futhark Compute Kernels (Sprint 3+) ───────────────────────────────────────
 

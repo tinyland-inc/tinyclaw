@@ -135,3 +135,29 @@ jobs:
         with:
           name: picoclaw-${{ matrix.goos }}-${{ matrix.goarch }}
           path: build/picoclaw-*
+
+  verified-core:
+    name: Build Verified Core (OCaml)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install OCaml and Dune
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ocaml opam
+          opam init --auto-setup --disable-sandboxing
+          eval $(opam env)
+          opam install dune yojson --yes
+
+      - name: Build verified core
+        run: |
+          eval $(opam env)
+          cd fstar/extracted && dune build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: picoclaw-core
+          path: fstar/extracted/_build/default/bin/main.exe

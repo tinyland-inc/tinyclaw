@@ -106,6 +106,72 @@
             };
           };
 
+          # F*-extracted verified core binary (OCaml)
+          picoclaw-core = pkgs.stdenv.mkDerivation {
+            pname = "picoclaw-core";
+            inherit version;
+            src = ./fstar/extracted;
+
+            nativeBuildInputs = with pkgs; [
+              ocaml
+              dune_3
+              ocamlPackages.findlib
+              ocamlPackages.yojson
+            ];
+
+            buildPhase = ''
+              dune build
+            '';
+
+            installPhase = ''
+              mkdir -p $out/bin
+              cp _build/default/bin/main.exe $out/bin/picoclaw-core
+            '';
+
+            meta = {
+              description = "PicoClaw verified core (F*-extracted)";
+              license = pkgs.lib.licenses.mit;
+            };
+          };
+
+          # Full verified bundle: gateway + core + dhall config
+          picoclaw-verified-bundle = pkgs.symlinkJoin {
+            name = "picoclaw-verified-bundle-${version}";
+            paths = [
+              self.packages.${system}.picoclaw
+              self.packages.${system}.picoclaw-core
+              self.packages.${system}.dhall-config
+            ];
+            postBuild = ''
+              test -x $out/bin/picoclaw || (echo "Missing gateway binary" && exit 1)
+              test -x $out/bin/picoclaw-core || (echo "Missing verified core binary" && exit 1)
+              test -d $out/share/picoclaw || (echo "Missing dhall config" && exit 1)
+            '';
+          };
+
+          # Docker image with verified core
+          picoclaw-verified-docker = pkgs.dockerTools.buildLayeredImage {
+            name = "picoclaw-verified";
+            tag = version;
+            contents = [
+              self.packages.${system}.picoclaw
+              self.packages.${system}.picoclaw-core
+              self.packages.${system}.dhall-config
+              pkgs.cacert
+              pkgs.tzdata
+            ];
+            config = {
+              Cmd = [ "/bin/picoclaw" "gateway" "--verified" ];
+              Env = [
+                "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+                "TZDIR=${pkgs.tzdata}/share/zoneinfo"
+              ];
+              ExposedPorts = {
+                "18790/tcp" = {};
+              };
+            };
+          };
+
           default = self.packages.${system}.picoclaw;
         };
 

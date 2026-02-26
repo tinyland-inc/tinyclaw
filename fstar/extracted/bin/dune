@@ -1,0 +1,4 @@
+(executable
+ (name main)
+ (public_name picoclaw-core)
+ (libraries picoclaw_core unix yojson))

@@ -1,5 +1,5 @@
 # ─── Go ─────────────────────────────────────────────────────────────────────────
-bin/
+/bin/
 build/
 *.exe
 *.dll
@@ -21,7 +21,12 @@ fstar/**/*.checked
 fstar/**/*.krml
 fstar/hints/
 fstar/extracted/_build/
+# Auto-extracted F* modules (case-insensitive: also matches picoclaw_*)
 fstar/extracted/lib/PicoClaw_*.ml
+# Preserve hand-written OCaml files
+!fstar/extracted/lib/picoclaw_core.ml
+!fstar/extracted/lib/json_codec.ml
+!fstar/extracted/lib/futhark_bindings.ml
 
 # ─── Futhark ────────────────────────────────────────────────────────────────────
 futhark/build/
@@ -47,7 +52,7 @@ result-*
 
 # ─── PicoClaw ───────────────────────────────────────────────────────────────────
 .picoclaw/
-config.json
+/config.json
 sessions/
 
 # ─── Secrets & Config ──────────────────────────────────────────────────────────
