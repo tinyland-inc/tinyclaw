@@ -1,0 +1,4 @@
+(library
+ (name picoclaw_core)
+ (public_name picoclaw-core.lib)
+ (libraries yojson))

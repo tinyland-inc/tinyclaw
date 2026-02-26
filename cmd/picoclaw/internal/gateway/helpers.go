@@ -16,6 +16,7 @@ import (
 	"github.com/sipeed/picoclaw/pkg/bus"
 	"github.com/sipeed/picoclaw/pkg/channels"
 	"github.com/sipeed/picoclaw/pkg/config"
+	"github.com/sipeed/picoclaw/pkg/core"
 	"github.com/sipeed/picoclaw/pkg/cron"
 	"github.com/sipeed/picoclaw/pkg/devices"
 	"github.com/sipeed/picoclaw/pkg/health"
@@ -27,10 +28,24 @@ import (
 	"github.com/sipeed/picoclaw/pkg/voice"
 )
 
-func gatewayCmd(debug bool) error {
+// GatewayMode selects the message processing backend.
+type GatewayMode int
+
+const (
+	// GatewayModeLegacy uses the existing Go agent loop.
+	GatewayModeLegacy GatewayMode = iota
+	// GatewayModeVerified uses the F*-extracted verified core.
+	GatewayModeVerified
+)
+
+func gatewayCmd(debug bool, mode GatewayMode) error {
 	if debug {
 		logger.SetLevel(logger.DEBUG)
 		fmt.Println("🔍 Debug mode enabled")
+	}
+
+	if mode == GatewayModeVerified {
+		fmt.Println("🔒 Verified mode: using F*-extracted core")
 	}
 
 	cfg, err := internal.LoadConfig()
@@ -113,6 +128,21 @@ func gatewayCmd(debug bool) error {
 	// Inject channel manager into agent loop for command handling
 	agentLoop.SetChannelManager(channelManager)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Initialize verified core proxy if requested
+	var coreProxy *core.CoreProxy
+	if mode == GatewayModeVerified {
+		coreProxy = core.NewCoreProxy("picoclaw-core")
+		if err := coreProxy.Start(ctx); err != nil {
+			fmt.Printf("⚠ Verified core failed to start: %v (falling back to legacy)\n", err)
+			coreProxy = nil
+		} else {
+			fmt.Println("✓ Verified core started")
+		}
+	}
+
 	var transcriber *voice.GroqTranscriber
 	groqAPIKey := cfg.Providers.Groq.APIKey
 	if groqAPIKey == "" {
@@ -159,9 +189,6 @@ func gatewayCmd(debug bool) error {
 	fmt.Printf("✓ Gateway started on %s:%d\n", cfg.Gateway.Host, cfg.Gateway.Port)
 	fmt.Println("Press Ctrl+C to stop")
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	if err := cronService.Start(); err != nil {
 		fmt.Printf("Error starting cron service: %v\n", err)
 	}
@@ -205,6 +232,9 @@ func gatewayCmd(debug bool) error {
 	fmt.Println("\nShutting down...")
 	if cp, ok := provider.(providers.StatefulProvider); ok {
 		cp.Close()
+	}
+	if coreProxy != nil {
+		coreProxy.Stop()
 	}
 	cancel()
 	healthServer.Stop(context.Background())

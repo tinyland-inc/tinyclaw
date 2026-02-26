@@ -17,10 +17,11 @@ dhall/**/*.json
 .dhall-cache/
 
 # ─── F* ─────────────────────────────────────────────────────────────────────────
-fstar/extracted/
 fstar/**/*.checked
 fstar/**/*.krml
 fstar/hints/
+fstar/extracted/_build/
+fstar/extracted/lib/PicoClaw_*.ml
 
 # ─── Futhark ────────────────────────────────────────────────────────────────────
 futhark/build/

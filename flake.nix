@@ -85,6 +85,12 @@
             dhall-json
             dhall-lsp-server
 
+            # F* / OCaml (verified core)
+            ocaml
+            dune_3
+            ocamlPackages.findlib
+            ocamlPackages.yojson
+
             # Build system
             just
             jq
