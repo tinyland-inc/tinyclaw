@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sync/atomic"
 
@@ -499,6 +500,50 @@ type ClawHubRegistryConfig struct {
 	Timeout         int    `json:"timeout"           env:"PICOCLAW_SKILLS_REGISTRIES_CLAWHUB_TIMEOUT"`
 	MaxZipSize      int    `json:"max_zip_size"      env:"PICOCLAW_SKILLS_REGISTRIES_CLAWHUB_MAX_ZIP_SIZE"`
 	MaxResponseSize int    `json:"max_response_size" env:"PICOCLAW_SKILLS_REGISTRIES_CLAWHUB_MAX_RESPONSE_SIZE"`
+}
+
+// LoadDhallConfig loads configuration from a .dhall file by invoking dhall-to-json
+// and parsing the resulting JSON. Returns nil, nil if dhall-to-json is not available.
+func LoadDhallConfig(path string) (*Config, error) {
+	dhallBin, err := exec.LookPath("dhall-to-json")
+	if err != nil {
+		return nil, nil // dhall-to-json not installed, caller should fall back
+	}
+
+	cmd := exec.Command(dhallBin, "--file", path)
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("dhall-to-json failed for %s: %w", path, err)
+	}
+
+	cfg := DefaultConfig()
+
+	// Same pre-scan logic as LoadConfig to avoid inheriting default model_list
+	var tmp Config
+	if err := json.Unmarshal(out, &tmp); err != nil {
+		return nil, fmt.Errorf("error parsing dhall-to-json output: %w", err)
+	}
+	if len(tmp.ModelList) > 0 {
+		cfg.ModelList = nil
+	}
+
+	if err := json.Unmarshal(out, cfg); err != nil {
+		return nil, fmt.Errorf("error parsing dhall-to-json output: %w", err)
+	}
+
+	if err := env.Parse(cfg); err != nil {
+		return nil, err
+	}
+
+	if len(cfg.ModelList) == 0 && cfg.HasProvidersConfig() {
+		cfg.ModelList = ConvertProvidersToModelList(cfg)
+	}
+
+	if err := cfg.ValidateModelList(); err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
 }
 
 func LoadConfig(path string) (*Config, error) {

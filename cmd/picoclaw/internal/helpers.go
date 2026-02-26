@@ -23,7 +23,25 @@ func GetConfigPath() string {
 	return filepath.Join(home, ".picoclaw", "config.json")
 }
 
+func GetDhallConfigPath() string {
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".picoclaw", "config.dhall")
+}
+
 func LoadConfig() (*config.Config, error) {
+	// Try Dhall config first (opt-in: only if .dhall file exists)
+	dhallPath := GetDhallConfigPath()
+	if _, err := os.Stat(dhallPath); err == nil {
+		cfg, err := config.LoadDhallConfig(dhallPath)
+		if err != nil {
+			return nil, fmt.Errorf("error loading dhall config: %w", err)
+		}
+		if cfg != nil {
+			return cfg, nil
+		}
+		// cfg == nil means dhall-to-json not installed, fall through to JSON
+	}
+
 	return config.LoadConfig(GetConfigPath())
 }
 

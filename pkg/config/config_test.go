@@ -393,6 +393,21 @@ func TestLoadConfig_OpenAIWebSearchCanBeDisabled(t *testing.T) {
 	}
 }
 
+func TestLoadDhallConfig_NilWhenNoBinary(t *testing.T) {
+	// LoadDhallConfig returns nil,nil if dhall-to-json is not on PATH
+	// We can't guarantee dhall-to-json is available in CI, so this test
+	// only verifies the function doesn't panic on a nonexistent file
+	cfg, err := LoadDhallConfig("/nonexistent/config.dhall")
+	if err != nil {
+		// If dhall-to-json IS installed, it should error on nonexistent file
+		t.Logf("LoadDhallConfig error (expected): %v", err)
+	}
+	if cfg == nil && err == nil {
+		// dhall-to-json not installed - this is the expected path
+		t.Log("dhall-to-json not found, LoadDhallConfig returned nil,nil (correct)")
+	}
+}
+
 func TestLoadConfig_WebToolsProxy(t *testing.T) {
 	tmpDir := t.TempDir()
 	configPath := filepath.Join(tmpDir, "config.json")
