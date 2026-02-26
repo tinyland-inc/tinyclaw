@@ -41,8 +41,8 @@ check: dhall-check go-lint go-test
 # Build everything (dhall render + go build)
 build: dhall-render go-build
 
-# Run all tests
-test: go-test
+# Run all tests (unit + e2e)
+test: go-test e2e-test
 
 # Verified build: dhall check + go build (+ fstar-check + futhark-test in future)
 verified-build: dhall-check build
@@ -125,6 +125,30 @@ go-update-deps:
     {{go}} get -u ./...
     {{go}} mod tidy
 
+# ─── E2E Integration Tests ─────────────────────────────────────────────────────
+
+# Run E2E integration tests
+e2e-test:
+    {{go}} test ./tests/e2e/... -v -count=1
+
+# ─── Migration ─────────────────────────────────────────────────────────────────
+
+# Convert JSON config to Dhall
+migrate-to-dhall config="":
+    @if [ -n "{{config}}" ]; then \
+        {{build_dir}}/{{binary_name}} migrate to-dhall --config "{{config}}"; \
+    else \
+        {{build_dir}}/{{binary_name}} migrate to-dhall; \
+    fi
+
+# Preview Dhall migration (dry-run)
+migrate-to-dhall-preview config="":
+    @if [ -n "{{config}}" ]; then \
+        {{build_dir}}/{{binary_name}} migrate to-dhall --dry-run --config "{{config}}"; \
+    else \
+        {{build_dir}}/{{binary_name}} migrate to-dhall --dry-run; \
+    fi
+
 # ─── F* Verified Core (Sprint 2+) ──────────────────────────────────────────────
 
 # Type-check and verify all F* modules
@@ -190,10 +214,15 @@ nix-build:
 nix-check:
     nix flake check
 
-# Build Docker image via nix2container (Sprint 4+)
+# Build Docker image via Nix dockerTools
 nix-docker:
-    @echo "Nix Docker build not yet implemented (Sprint 4)"
-    @exit 1
+    nix build .#picoclaw-docker
+    @echo "Docker image built: result (load with docker load < result)"
+
+# Build full bundle (gateway + dhall config)
+nix-bundle:
+    nix build .#picoclaw-bundle
+    @echo "Bundle built: result/"
 
 # ─── Installation ──────────────────────────────────────────────────────────────
 

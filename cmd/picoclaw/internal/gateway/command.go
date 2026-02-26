@@ -15,10 +15,8 @@ func NewGatewayCommand() *cobra.Command {
 		Short:   "Start picoclaw gateway",
 		Args:    cobra.NoArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
-			mode := GatewayModeLegacy // Default to legacy for now
-			if verified {
-				mode = GatewayModeVerified
-			} else if legacy {
+			mode := GatewayModeVerified // Default to verified mode
+			if legacy {
 				mode = GatewayModeLegacy
 			}
 			return gatewayCmd(debug, mode)
@@ -26,8 +24,8 @@ func NewGatewayCommand() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVarP(&debug, "debug", "d", false, "Enable debug logging")
-	cmd.Flags().BoolVar(&verified, "verified", false, "Use F*-verified core for message processing")
-	cmd.Flags().BoolVar(&legacy, "legacy", false, "Use legacy Go agent loop (default)")
+	cmd.Flags().BoolVar(&verified, "verified", false, "Use F*-verified core for message processing (default)")
+	cmd.Flags().BoolVar(&legacy, "legacy", false, "Use legacy Go agent loop")
 
 	return cmd
 }

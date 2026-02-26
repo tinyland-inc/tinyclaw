@@ -70,6 +70,42 @@
             '';
           };
 
+          # Full bundle: gateway + dhall config + default rendered configs
+          picoclaw-bundle = pkgs.symlinkJoin {
+            name = "picoclaw-bundle-${version}";
+            paths = [
+              self.packages.${system}.picoclaw
+              self.packages.${system}.dhall-config
+            ];
+            postBuild = ''
+              # Verify both components are present
+              test -x $out/bin/picoclaw || (echo "Missing picoclaw binary" && exit 1)
+              test -d $out/share/picoclaw || (echo "Missing dhall config" && exit 1)
+            '';
+          };
+
+          # Docker image via pkgs.dockerTools
+          picoclaw-docker = pkgs.dockerTools.buildLayeredImage {
+            name = "picoclaw";
+            tag = version;
+            contents = [
+              self.packages.${system}.picoclaw
+              self.packages.${system}.dhall-config
+              pkgs.cacert
+              pkgs.tzdata
+            ];
+            config = {
+              Cmd = [ "/bin/picoclaw" "gateway" ];
+              Env = [
+                "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+                "TZDIR=${pkgs.tzdata}/share/zoneinfo"
+              ];
+              ExposedPorts = {
+                "18790/tcp" = {};
+              };
+            };
+          };
+
           default = self.packages.${system}.picoclaw;
         };
 
@@ -118,6 +154,20 @@
             nativeBuildInputs = with pkgs; [ dhall dhall-json ];
             buildPhase = ''
               find . -name '*.dhall' -exec dhall type --file {} \; > /dev/null
+            '';
+            installPhase = "mkdir -p $out && touch $out/ok";
+          };
+
+          go-tests = pkgs.stdenv.mkDerivation {
+            pname = "picoclaw-go-tests";
+            inherit version;
+            src = ./.;
+            nativeBuildInputs = with pkgs; [ go ];
+            buildPhase = ''
+              export HOME=$TMPDIR
+              export GOFLAGS="-tags=stdjson"
+              go generate ./...
+              go test ./...
             '';
             installPhase = "mkdir -p $out && touch $out/ok";
           };

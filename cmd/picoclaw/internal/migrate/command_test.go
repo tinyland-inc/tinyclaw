@@ -13,12 +13,12 @@ func TestNewMigrateCommand(t *testing.T) {
 	require.NotNil(t, cmd)
 
 	assert.Equal(t, "migrate", cmd.Use)
-	assert.Equal(t, "Migrate from OpenClaw to PicoClaw", cmd.Short)
+	assert.Equal(t, "Migrate configuration between formats", cmd.Short)
 
 	assert.Len(t, cmd.Aliases, 0)
 
 	assert.True(t, cmd.HasExample())
-	assert.False(t, cmd.HasSubCommands())
+	assert.True(t, cmd.HasSubCommands())
 
 	assert.Nil(t, cmd.Run)
 	assert.NotNil(t, cmd.RunE)
@@ -28,11 +28,38 @@ func TestNewMigrateCommand(t *testing.T) {
 
 	assert.True(t, cmd.HasFlags())
 
+	// Legacy flags on root migrate command
 	assert.NotNil(t, cmd.Flags().Lookup("dry-run"))
-	assert.NotNil(t, cmd.Flags().Lookup("refresh"))
-	assert.NotNil(t, cmd.Flags().Lookup("config-only"))
-	assert.NotNil(t, cmd.Flags().Lookup("workspace-only"))
 	assert.NotNil(t, cmd.Flags().Lookup("force"))
-	assert.NotNil(t, cmd.Flags().Lookup("openclaw-home"))
-	assert.NotNil(t, cmd.Flags().Lookup("picoclaw-home"))
+}
+
+func TestNewMigrateCommand_OpenclawSubcommand(t *testing.T) {
+	cmd := NewMigrateCommand()
+
+	openclaw, _, err := cmd.Find([]string{"openclaw"})
+	require.NoError(t, err)
+	require.NotNil(t, openclaw)
+
+	assert.Equal(t, "openclaw", openclaw.Use)
+	assert.NotNil(t, openclaw.Flags().Lookup("dry-run"))
+	assert.NotNil(t, openclaw.Flags().Lookup("refresh"))
+	assert.NotNil(t, openclaw.Flags().Lookup("config-only"))
+	assert.NotNil(t, openclaw.Flags().Lookup("workspace-only"))
+	assert.NotNil(t, openclaw.Flags().Lookup("force"))
+	assert.NotNil(t, openclaw.Flags().Lookup("openclaw-home"))
+	assert.NotNil(t, openclaw.Flags().Lookup("picoclaw-home"))
+}
+
+func TestNewMigrateCommand_ToDhallSubcommand(t *testing.T) {
+	cmd := NewMigrateCommand()
+
+	toDhall, _, err := cmd.Find([]string{"to-dhall"})
+	require.NoError(t, err)
+	require.NotNil(t, toDhall)
+
+	assert.Equal(t, "to-dhall", toDhall.Use)
+	assert.NotNil(t, toDhall.Flags().Lookup("config"))
+	assert.NotNil(t, toDhall.Flags().Lookup("output"))
+	assert.NotNil(t, toDhall.Flags().Lookup("dry-run"))
+	assert.NotNil(t, toDhall.Flags().Lookup("force"))
 }
