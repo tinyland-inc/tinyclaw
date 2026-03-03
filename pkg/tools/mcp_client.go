@@ -89,8 +89,8 @@ func NewMCPClientTool(name, description string) *MCPClientTool {
 	}
 }
 
-func (t *MCPClientTool) Name() string        { return t.name }
-func (t *MCPClientTool) Description() string  { return t.description }
+func (t *MCPClientTool) Name() string               { return t.name }
+func (t *MCPClientTool) Description() string        { return t.description }
 func (t *MCPClientTool) Parameters() map[string]any { return t.params }
 
 // Start spawns the MCP server process and performs the initialize handshake.

@@ -15,7 +15,7 @@ type MCPProxyTool struct {
 }
 
 func (t *MCPProxyTool) Name() string        { return t.info.Name }
-func (t *MCPProxyTool) Description() string  { return t.info.Description }
+func (t *MCPProxyTool) Description() string { return t.info.Description }
 
 func (t *MCPProxyTool) Parameters() map[string]any {
 	if t.info.InputSchema != nil {

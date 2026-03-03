@@ -74,9 +74,11 @@ func NewXMPPChannel(cfg config.XMPPConfig, messageBus *bus.MessageBus) (*XMPPCha
 func (c *XMPPChannel) Start(ctx context.Context) error {
 	logger.InfoC("xmpp", "Starting XMPP channel")
 
-	c.ctx, c.cancel = context.WithCancel(ctx)
+	childCtx, cancel := context.WithCancel(ctx)
+	c.ctx = childCtx
+	c.cancel = cancel
 
-	if err := c.connectWithCtx(c.ctx); err != nil {
+	if err := c.connectWithCtx(childCtx); err != nil {
 		return fmt.Errorf("xmpp connection failed: %w", err)
 	}
 
@@ -194,7 +196,6 @@ func (c *XMPPChannel) connectWithCtx(ctx context.Context) error {
 	return nil
 }
 
-//nolint:gocognit // receive loop handles XML stream parsing with multiple checks
 func (c *XMPPChannel) receiveLoop() {
 	logger.InfoC("xmpp", "XMPP receive loop started")
 
