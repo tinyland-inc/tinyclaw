@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"fmt"
 )
 
 // ApprovalNotifyTool sends approval request notifications to a configured
@@ -102,18 +101,15 @@ func (t *ApprovalNotifyTool) Execute(ctx context.Context, args map[string]any) *
 	}
 
 	// Format the approval notification message
-	message := fmt.Sprintf(
-		"Approval needed: %s wants to %s",
-		agent, tool,
-	)
+	message := "Approval needed: " + agent + " wants to " + tool
 	if argsSummary != "" {
-		message += fmt.Sprintf(" with: %s", argsSummary)
+		message += " with: " + argsSummary
 	}
-	message += fmt.Sprintf("\n\nReply /approve %s or /reject %s <reason>", approvalID, approvalID)
+	message += "\n\nReply /approve " + approvalID + " or /reject " + approvalID + " <reason>"
 
 	if err := t.sendCallback(channel, chatID, message); err != nil {
-		return ErrorResult(fmt.Sprintf("failed to send notification: %s", err.Error()))
+		return ErrorResult("failed to send notification: " + err.Error())
 	}
 
-	return SilentResult(fmt.Sprintf("Approval notification sent for %s (ID: %s)", tool, approvalID))
+	return SilentResult("Approval notification sent for " + tool + " (ID: " + approvalID + ")")
 }

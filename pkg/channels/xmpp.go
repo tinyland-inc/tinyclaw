@@ -33,6 +33,7 @@ const (
 // xmppMessageBody is an XMPP message stanza with a body child element.
 type xmppMessageBody struct {
 	stanza.Message
+
 	Body string `xml:"body"`
 }
 
@@ -75,7 +76,7 @@ func (c *XMPPChannel) Start(ctx context.Context) error {
 
 	c.ctx, c.cancel = context.WithCancel(ctx)
 
-	if err := c.connect(); err != nil {
+	if err := c.connectWithCtx(c.ctx); err != nil {
 		return fmt.Errorf("xmpp connection failed: %w", err)
 	}
 
@@ -141,8 +142,8 @@ func (c *XMPPChannel) Send(ctx context.Context, msg bus.OutboundMessage) error {
 	return nil
 }
 
-func (c *XMPPChannel) connect() error {
-	dialCtx, dialCancel := context.WithTimeout(c.ctx, 30*time.Second)
+func (c *XMPPChannel) connectWithCtx(ctx context.Context) error {
+	dialCtx, dialCancel := context.WithTimeout(ctx, 30*time.Second)
 	defer dialCancel()
 
 	tlsConfig := &tls.Config{
@@ -180,7 +181,7 @@ func (c *XMPPChannel) connect() error {
 	c.mu.Unlock()
 
 	// Send initial presence to signal availability
-	presenceErr := session.Send(c.ctx, stanza.Presence{Type: stanza.AvailablePresence}.Wrap(nil))
+	presenceErr := session.Send(ctx, stanza.Presence{Type: stanza.AvailablePresence}.Wrap(nil))
 	if presenceErr != nil {
 		logger.WarnCF("xmpp", "Failed to send initial presence", map[string]any{
 			"error": presenceErr.Error(),
@@ -229,20 +230,7 @@ func (c *XMPPChannel) receiveLoop() {
 		}
 
 		// Populate From/To from StartElement attributes if not set by decode
-		if msg.From.Equal(jid.JID{}) || msg.To.Equal(jid.JID{}) {
-			parsed, parseErr := stanza.NewMessage(*start)
-			if parseErr == nil {
-				if msg.From.Equal(jid.JID{}) {
-					msg.From = parsed.From
-				}
-				if msg.To.Equal(jid.JID{}) {
-					msg.To = parsed.To
-				}
-				if msg.Type == "" {
-					msg.Type = parsed.Type
-				}
-			}
-		}
+		c.populateMessageAttrs(&msg, start)
 
 		if msg.Body == "" {
 			return nil
@@ -265,6 +253,26 @@ func (c *XMPPChannel) receiveLoop() {
 	}
 
 	logger.InfoC("xmpp", "XMPP receive loop stopped")
+}
+
+func (c *XMPPChannel) populateMessageAttrs(msg *xmppMessageBody, start *xml.StartElement) {
+	emptyJID := jid.JID{}
+	if !msg.From.Equal(emptyJID) && !msg.To.Equal(emptyJID) {
+		return
+	}
+	parsed, parseErr := stanza.NewMessage(*start)
+	if parseErr != nil {
+		return
+	}
+	if msg.From.Equal(emptyJID) {
+		msg.From = parsed.From
+	}
+	if msg.To.Equal(emptyJID) {
+		msg.To = parsed.To
+	}
+	if msg.Type == "" {
+		msg.Type = parsed.Type
+	}
 }
 
 func (c *XMPPChannel) handleIncoming(msg xmppMessageBody) {
@@ -427,7 +435,7 @@ func (c *XMPPChannel) reconnectLoop() {
 
 		logger.InfoC("xmpp", "Attempting XMPP reconnect")
 
-		if err := c.connect(); err != nil {
+		if err := c.connectWithCtx(c.ctx); err != nil {
 			logger.ErrorCF("xmpp", "XMPP reconnect failed", map[string]any{
 				"error": err.Error(),
 			})

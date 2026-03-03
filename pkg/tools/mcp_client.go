@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os/exec"
 	"strings"
 	"sync"
@@ -101,13 +103,13 @@ func (t *MCPClientTool) Start(ctx context.Context, command string, args []string
 	if err != nil {
 		return fmt.Errorf("mcp stdin pipe: %w", err)
 	}
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return fmt.Errorf("mcp stdout pipe: %w", err)
+	stdout, pipeErr := cmd.StdoutPipe()
+	if pipeErr != nil {
+		return fmt.Errorf("mcp stdout pipe: %w", pipeErr)
 	}
 
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("mcp start: %w", err)
+	if startErr := cmd.Start(); startErr != nil {
+		return fmt.Errorf("mcp start: %w", startErr)
 	}
 
 	t.cmd = cmd
@@ -170,9 +172,7 @@ func (t *MCPClientTool) DiscoveredTools() map[string]MCPToolInfo {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	result := make(map[string]MCPToolInfo, len(t.mcpTools))
-	for k, v := range t.mcpTools {
-		result[k] = v
-	}
+	maps.Copy(result, t.mcpTools)
 	return result
 }
 
@@ -289,7 +289,7 @@ func (t *MCPClientTool) listToolNames() []string {
 // Caller must hold t.mu.
 func (t *MCPClientTool) call(method string, params any) (json.RawMessage, error) {
 	if t.stdin == nil || t.stdout == nil {
-		return nil, fmt.Errorf("MCP server not running")
+		return nil, errors.New("MCP server not running")
 	}
 
 	id := t.nextID.Add(1)
@@ -306,19 +306,19 @@ func (t *MCPClientTool) call(method string, params any) (json.RawMessage, error)
 	}
 	data = append(data, '\n')
 
-	if _, err := t.stdin.Write(data); err != nil {
-		return nil, fmt.Errorf("write request: %w", err)
+	if _, writeErr := t.stdin.Write(data); writeErr != nil {
+		return nil, fmt.Errorf("write request: %w", writeErr)
 	}
 
 	// Read response line
-	line, err := t.stdout.ReadBytes('\n')
-	if err != nil {
-		return nil, fmt.Errorf("read response: %w", err)
+	line, readErr := t.stdout.ReadBytes('\n')
+	if readErr != nil {
+		return nil, fmt.Errorf("read response: %w", readErr)
 	}
 
 	var resp jsonRPCResponse
-	if err := json.Unmarshal(line, &resp); err != nil {
-		return nil, fmt.Errorf("parse response: %w", err)
+	if unmarshalErr := json.Unmarshal(line, &resp); unmarshalErr != nil {
+		return nil, fmt.Errorf("parse response: %w", unmarshalErr)
 	}
 
 	if resp.Error != nil {
@@ -332,7 +332,7 @@ func (t *MCPClientTool) call(method string, params any) (json.RawMessage, error)
 // Caller must hold t.mu.
 func (t *MCPClientTool) notify(method string, params any) error {
 	if t.stdin == nil {
-		return fmt.Errorf("MCP server not running")
+		return errors.New("MCP server not running")
 	}
 
 	type notification struct {

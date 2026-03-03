@@ -49,7 +49,7 @@ func RegisterMCPServer(
 	args []string,
 	prefix string,
 ) (int, error) {
-	client := NewMCPClientTool(name, fmt.Sprintf("MCP server: %s", name))
+	client := NewMCPClientTool(name, "MCP server: "+name)
 
 	if err := client.Start(ctx, command, args); err != nil {
 		return 0, fmt.Errorf("start MCP server %q: %w", name, err)

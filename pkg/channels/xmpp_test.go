@@ -34,7 +34,7 @@ func TestNewXMPPChannel(t *testing.T) {
 			Password: "secret",
 		}
 		ch, err := NewXMPPChannel(cfg, messageBus)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, ch)
 		assert.Contains(t, err.Error(), "jid is required")
 	})
@@ -45,7 +45,7 @@ func TestNewXMPPChannel(t *testing.T) {
 			JID:     "bot@example.com",
 		}
 		ch, err := NewXMPPChannel(cfg, messageBus)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, ch)
 		assert.Contains(t, err.Error(), "password is required")
 	})
@@ -57,7 +57,7 @@ func TestNewXMPPChannel(t *testing.T) {
 			Password: "secret",
 		}
 		ch, err := NewXMPPChannel(cfg, messageBus)
-		assert.Error(t, err)
+		require.Error(t, err)
 		assert.Nil(t, ch)
 		assert.Contains(t, err.Error(), "invalid xmpp jid")
 	})
@@ -134,7 +134,7 @@ func TestXMPPChannelServerAddr(t *testing.T) {
 		}
 		ch, err := NewXMPPChannel(cfg, messageBus)
 		require.NoError(t, err)
-		assert.Equal(t, "", ch.serverAddr())
+		assert.Empty(t, ch.serverAddr())
 	})
 }
 
@@ -153,7 +153,7 @@ func TestXMPPChannelSendNotRunning(t *testing.T) {
 		ChatID:  "user@example.com",
 		Content: "hello",
 	})
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "not running")
 }
 
@@ -197,7 +197,7 @@ func TestXMPPChannelSendInvalidJID(t *testing.T) {
 		ChatID:  "not valid @@@",
 		Content: "hello",
 	})
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.Contains(t, err.Error(), "invalid recipient jid")
 }
 

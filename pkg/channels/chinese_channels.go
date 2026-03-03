@@ -10,6 +10,8 @@ import (
 
 // initChineseChannels initializes Feishu, QQ, DingTalk, OneBot, WeCom, and
 // WeCom App channels. Excluded from builds with -tags nochinese.
+//
+//nolint:gocognit // repetitive channel initialization, one block per channel kind
 func initChineseChannels(cfg *config.Config, messageBus *bus.MessageBus, channels map[string]Channel) {
 	if cfg.Channels.Feishu.Enabled {
 		logger.DebugC("channels", "Attempting to initialize Feishu channel")

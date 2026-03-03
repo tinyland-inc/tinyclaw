@@ -3,9 +3,9 @@ package tools_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -82,18 +82,12 @@ func TestMCPClientToolExecuteEmptyToolName(t *testing.T) {
 
 // TestMCPProxyToolInterface verifies MCPProxyTool satisfies Tool interface.
 func TestMCPProxyToolInterface(t *testing.T) {
-	// We can't easily instantiate MCPProxyTool directly since it's in the
-	// same package, but we can verify via RegisterMCPServer with a mock server.
-	// This test just verifies the interface at compile time.
 	var _ tools.Tool = (*tools.MCPProxyTool)(nil)
 }
 
 // TestMCPRegistryWithMockServer tests the full lifecycle with a mock MCP server.
-// Requires a helper script that speaks JSON-RPC 2.0.
 func TestMCPRegistryWithMockServer(t *testing.T) {
-	// Skip if no mock server available
 	mockScript := createMockMCPServer(t)
-	defer os.Remove(mockScript)
 
 	ctx := context.Background()
 	registry := tools.NewToolRegistry()
@@ -102,7 +96,6 @@ func TestMCPRegistryWithMockServer(t *testing.T) {
 		ctx, registry,
 		"mock-gnucash", mockScript, nil, "",
 	)
-
 	if err != nil {
 		t.Fatalf("RegisterMCPServer failed: %v", err)
 	}
@@ -138,7 +131,6 @@ func TestMCPRegistryWithMockServer(t *testing.T) {
 // TestMCPRegistryToolExecution tests calling individual proxy tools.
 func TestMCPRegistryToolExecution(t *testing.T) {
 	mockScript := createMockMCPServer(t)
-	defer os.Remove(mockScript)
 
 	ctx := context.Background()
 	registry := tools.NewToolRegistry()
@@ -160,7 +152,6 @@ func TestMCPRegistryToolExecution(t *testing.T) {
 // TestMCPRegistryWithPrefix tests tool name prefixing.
 func TestMCPRegistryWithPrefix(t *testing.T) {
 	mockScript := createMockMCPServer(t)
-	defer os.Remove(mockScript)
 
 	ctx := context.Background()
 	registry := tools.NewToolRegistry()
@@ -209,7 +200,6 @@ func TestMCPClientIntegrationWithBridge(t *testing.T) {
 }
 
 // createMockMCPServer creates a temporary bash script that acts as an MCP server.
-// It responds to initialize, tools/list, and tools/call JSON-RPC requests.
 func createMockMCPServer(t *testing.T) string {
 	t.Helper()
 
@@ -255,24 +245,12 @@ done
 		t.Skip("python3 not available; skipping mock MCP server tests")
 	}
 
-	f, err := os.CreateTemp("", "mock-mcp-*.sh")
-	if err != nil {
-		t.Fatalf("create temp file: %v", err)
+	scriptPath := filepath.Join(t.TempDir(), "mock-mcp.sh")
+	if err := os.WriteFile(scriptPath, []byte(script), 0o755); err != nil {
+		t.Fatalf("write mock script: %v", err)
 	}
 
-	if _, err := f.WriteString(script); err != nil {
-		f.Close()
-		os.Remove(f.Name())
-		t.Fatalf("write script: %v", err)
-	}
-	f.Close()
-
-	if err := os.Chmod(f.Name(), 0o755); err != nil {
-		os.Remove(f.Name())
-		t.Fatalf("chmod: %v", err)
-	}
-
-	return f.Name()
+	return scriptPath
 }
 
 // TestJSONRPCTypes verifies JSON serialization of request/response types.
@@ -308,12 +286,3 @@ func TestJSONRPCTypes(t *testing.T) {
 		t.Errorf("id = %v, want 1", resp["id"])
 	}
 }
-
-// Ensure MCPProxyTool is exported for interface checks
-func init() {
-	// Compile-time interface check
-	var _ tools.Tool = (*tools.MCPProxyTool)(nil)
-}
-
-// Helper to suppress unused import warnings
-var _ = fmt.Sprint

@@ -317,13 +317,13 @@ type WeComAppConfig struct {
 }
 
 type XMPPConfig struct {
-	Enabled      bool                `env:"TINYCLAW_CHANNELS_XMPP_ENABLED"       json:"enabled"`
-	Server       string              `env:"TINYCLAW_CHANNELS_XMPP_SERVER"        json:"server"`
-	JID          string              `env:"TINYCLAW_CHANNELS_XMPP_JID"           json:"jid"`
-	Password     string              `env:"TINYCLAW_CHANNELS_XMPP_PASSWORD"      json:"password"`
+	Enabled      bool                `env:"TINYCLAW_CHANNELS_XMPP_ENABLED" json:"enabled"`
+	Server       string              `env:"TINYCLAW_CHANNELS_XMPP_SERVER" json:"server"`
+	JID          string              `env:"TINYCLAW_CHANNELS_XMPP_JID" json:"jid"`
+	Password     string              `env:"TINYCLAW_CHANNELS_XMPP_PASSWORD" json:"password"`
 	OMEMOEnabled bool                `env:"TINYCLAW_CHANNELS_XMPP_OMEMO_ENABLED" json:"omemo_enabled"`
-	MUCRooms     []string            `env:"TINYCLAW_CHANNELS_XMPP_MUC_ROOMS"    json:"muc_rooms"`
-	AllowFrom    FlexibleStringSlice `env:"TINYCLAW_CHANNELS_XMPP_ALLOW_FROM"    json:"allow_from"`
+	MUCRooms     []string            `env:"TINYCLAW_CHANNELS_XMPP_MUC_ROOMS" json:"muc_rooms"`
+	AllowFrom    FlexibleStringSlice `env:"TINYCLAW_CHANNELS_XMPP_ALLOW_FROM" json:"allow_from"`
 }
 
 type HeartbeatConfig struct {
